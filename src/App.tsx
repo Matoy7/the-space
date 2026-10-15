@@ -1,4 +1,4 @@
-import type { ReactNode } from "react"
+import { useEffect, useRef, useState, type ReactNode } from "react"
 import {
   CalendarIcon,
   ChevronDownIcon,
@@ -20,6 +20,32 @@ const imgGalilee = `${assetPathPrefix}/45898.png`
 const imgDesert = `${assetPathPrefix}/2a252.png`
 const imgSoundBath = `${assetPathPrefix}/bcf2e.png`
 const imgNature = `${assetPathPrefix}/54a2d.png`
+const imgRetreatGalilee = `${assetPathPrefix}/retreat-galilee.jpg`
+const imgRetreatRamon = `${assetPathPrefix}/retreat-ramon.jpg`
+
+const featuredRetreats = [
+  {
+    title: "יוגה מול הים",
+    date: "17-17 באפריל",
+    location: "חוף גורדון, תל אביב",
+    image: imgHero,
+  },
+  {
+    title: "יוגה בין הזיתים",
+    date: "8-10 במאי",
+    location: "כפר ורדים, גליל מערבי",
+    image: imgRetreatGalilee,
+  },
+  {
+    title: "זריחה במכתש",
+    date: "22-24 במאי",
+    location: "מצפה רמון",
+    image: imgRetreatRamon,
+  },
+]
+
+const AUTOPLAY_MS = 2500
+const SWIPE_THRESHOLD_PX = 40
 
 /* Listed in reading order (right → left in RTL). */
 const categories = [
@@ -123,7 +149,7 @@ function SectionHeader({ title }: { title: string }) {
 /* Header geometry is matched to the approved reference at a 390px viewport. */
 function Logo() {
   return (
-    <span className="relative block h-[29.1px] w-[91.4px] translate-x-[0.81px] -translate-y-[0.46px] text-black">
+    <h1 className="relative block h-[29.1px] w-[91.4px] translate-x-[0.81px] -translate-y-[0.46px] text-black">
       <svg
         aria-hidden="true"
         className="absolute inset-0 overflow-visible"
@@ -141,7 +167,7 @@ function Logo() {
       <span className="absolute inset-0 flex items-center justify-center text-[18.95px] leading-none font-bold tracking-[0.89px]">
         <span className="-me-[0.89px] translate-x-[0.26px] -translate-y-[2.16px]">המרחב</span>
       </span>
-    </span>
+    </h1>
   )
 }
 
@@ -227,37 +253,140 @@ function CategoryStrip() {
   )
 }
 
-function FeaturedRetreat() {
+function FeaturedSlide({
+  active,
+  date,
+  image,
+  index,
+  location,
+  title,
+  total,
+}: (typeof featuredRetreats)[number] & { active: boolean; index: number; total: number }) {
   return (
-    <section aria-label="מומלץ" className="flex flex-col gap-4 px-4">
-      <article className="relative flex aspect-[5/4] flex-col justify-end overflow-hidden rounded-feature bg-hero p-6 text-white">
-        <img
-          alt=""
-          className="pointer-events-none absolute inset-0 size-full object-cover"
-          src={imgHero}
-        />
-        <div className="absolute inset-x-0 bottom-0 h-3/4 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
-        <IconButton className="absolute end-4 top-4" label="שמור למועדפים" tone="overlay">
-          <HeartIcon />
-        </IconButton>
+    <article
+      aria-hidden={!active}
+      aria-label={`${index + 1} מתוך ${total}`}
+      aria-roledescription="שקופית"
+      className={`absolute inset-0 flex flex-col justify-end p-6 text-white transition-opacity duration-500 ease-out motion-reduce:transition-none ${
+        active ? "z-[1] opacity-100" : "pointer-events-none opacity-0"
+      }`}
+      inert={!active}
+      role="group"
+    >
+      <img
+        alt=""
+        className="pointer-events-none absolute inset-0 size-full object-cover"
+        draggable={false}
+        src={image}
+      />
+      <div className="absolute inset-x-0 bottom-0 h-3/4 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
+      <IconButton className="absolute end-4 top-4" label="שמור למועדפים" tone="overlay">
+        <HeartIcon />
+      </IconButton>
 
-        <div className="relative flex flex-col gap-1">
-          <h1 className="text-display font-bold">יוגה מול הים</h1>
-          <p className="text-body text-white/90">ריטריט סופשבוע בחוף גורדון, תל אביב</p>
+      <h2 className="relative text-display font-bold">{title}</h2>
+      <div className="relative mt-2 flex items-end justify-between gap-4">
+        <div className="flex flex-col gap-1 text-meta text-white/90">
+          <MetaItem icon={<CalendarIcon size={16} />}>{date}</MetaItem>
+          <MetaItem icon={<MapPinIcon size={16} />}>{location}</MetaItem>
         </div>
-        <div className="relative mt-4 flex items-end justify-between gap-4">
-          <div className="flex flex-col gap-1 text-meta text-white/90">
-            <MetaItem icon={<CalendarIcon size={16} />}>17-17 באפריל</MetaItem>
-            <MetaItem icon={<MapPinIcon size={16} />}>חוף גורדון, תל אביב</MetaItem>
-          </div>
-          <PrimaryButton>לפרטים</PrimaryButton>
-        </div>
-      </article>
+        <PrimaryButton>לפרטים</PrimaryButton>
+      </div>
+    </article>
+  )
+}
 
-      <div aria-hidden="true" className="flex items-center justify-center gap-2">
-        <span className="h-1.5 w-6 rounded-full bg-accent" />
-        <span className="h-1.5 w-2 rounded-full bg-line" />
-        <span className="h-1.5 w-2 rounded-full bg-line" />
+function FeaturedCarousel() {
+  const total = featuredRetreats.length
+  const [active, setActive] = useState(0)
+  const [interacting, setInteracting] = useState(false)
+  const [focused, setFocused] = useState(false)
+  const [pageHidden, setPageHidden] = useState(() => typeof document !== "undefined" && document.hidden)
+  // Bumped on every manual navigation so the autoplay timer restarts from zero.
+  const [timerEpoch, setTimerEpoch] = useState(0)
+  const pointerStartX = useRef<number | null>(null)
+
+  useEffect(() => {
+    const onVisibility = () => setPageHidden(document.hidden)
+    document.addEventListener("visibilitychange", onVisibility)
+    return () => document.removeEventListener("visibilitychange", onVisibility)
+  }, [])
+
+  const paused = interacting || focused || pageHidden
+  useEffect(() => {
+    if (paused) return
+    const timer = window.setTimeout(() => setActive((i) => (i + 1) % total), AUTOPLAY_MS)
+    return () => window.clearTimeout(timer)
+  }, [active, paused, timerEpoch, total])
+
+  const goTo = (index: number) => {
+    setActive(((index % total) + total) % total)
+    setTimerEpoch((n) => n + 1)
+  }
+
+  const endInteraction = (clientX: number | null) => {
+    const startX = pointerStartX.current
+    pointerStartX.current = null
+    setInteracting(false)
+    if (startX === null || clientX === null) return
+    const dx = clientX - startX
+    if (Math.abs(dx) < SWIPE_THRESHOLD_PX) return
+    // RTL: the next slide sits to the left, so swiping left (dx < 0) advances.
+    goTo(dx < 0 ? active + 1 : active - 1)
+  }
+
+  return (
+    <section
+      aria-label="ריטריטים מומלצים"
+      aria-roledescription="קרוסלה"
+      className="flex flex-col gap-2 px-4"
+      onBlur={(e) => {
+        if (!e.currentTarget.contains(e.relatedTarget as Node | null)) setFocused(false)
+      }}
+      // Pause for keyboard focus only; a tap also focuses the dot but should not stop autoplay.
+      onFocus={(e) => setFocused(e.target.matches(":focus-visible"))}
+    >
+      <div
+        aria-live={paused ? "polite" : "off"}
+        className="relative aspect-[5/4] touch-pan-y overflow-hidden rounded-feature bg-hero select-none"
+        onPointerCancel={() => endInteraction(null)}
+        onPointerDown={(e) => {
+          pointerStartX.current = e.clientX
+          setInteracting(true)
+        }}
+        onPointerLeave={(e) => {
+          if (pointerStartX.current !== null) endInteraction(e.clientX)
+        }}
+        onPointerUp={(e) => endInteraction(e.clientX)}
+      >
+        {featuredRetreats.map((slide, index) => (
+          <FeaturedSlide
+            {...slide}
+            active={index === active}
+            index={index}
+            key={slide.title}
+            total={total}
+          />
+        ))}
+      </div>
+
+      <div className="flex items-center justify-center">
+        {featuredRetreats.map((slide, index) => (
+          <button
+            aria-current={index === active ? "true" : undefined}
+            aria-label={`מעבר לשקופית ${index + 1}: ${slide.title}`}
+            className="group flex h-10 items-center px-1"
+            key={slide.title}
+            onClick={() => goTo(index)}
+            type="button"
+          >
+            <span
+              className={`block h-1.5 rounded-full transition-[width,background-color] duration-300 motion-reduce:transition-none ${
+                index === active ? "w-6 bg-accent" : "w-2 bg-line group-active:bg-ink-muted"
+              }`}
+            />
+          </button>
+        ))}
       </div>
     </section>
   )
@@ -330,7 +459,7 @@ function App() {
       <AppHeader />
       <main className="flex flex-col gap-8 pt-2 pb-[calc(env(safe-area-inset-bottom)+32px)]">
         <CategoryStrip />
-        <FeaturedRetreat />
+        <FeaturedCarousel />
         <UpcomingEvents />
         <FeaturedRetreats />
       </main>
