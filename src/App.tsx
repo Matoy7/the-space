@@ -9,7 +9,6 @@ import {
 } from "./icons"
 
 const assetPathPrefix = `${import.meta.env.BASE_URL}assets`
-const imgLogo = `${assetPathPrefix}/77585.png`
 const imgWellness = `${assetPathPrefix}/2af54.png`
 const imgCommunity = `${assetPathPrefix}/089e8.png`
 const imgRetreats = `${assetPathPrefix}/71e6d.png`
@@ -121,21 +120,68 @@ function SectionHeader({ title }: { title: string }) {
 
 /* ---------- Sections ---------- */
 
+/* Header geometry is matched to the approved reference at a 390px viewport. */
+function Logo() {
+  return (
+    <span className="relative block h-[29.1px] w-[91.4px] translate-x-[0.81px] -translate-y-[0.46px] text-black">
+      <svg
+        aria-hidden="true"
+        className="absolute inset-0 overflow-visible"
+        fill="none"
+        height="29.1"
+        stroke="currentColor"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={1.5}
+        viewBox="0 0 91.4 29.1"
+        width="91.4"
+      >
+        <path d="M0.75 7.65V0.75H7.65M83.75 0.75H90.65V7.65M90.65 21.45V28.35H83.75M7.65 28.35H0.75V21.45" />
+      </svg>
+      <span className="absolute inset-0 flex items-center justify-center text-[18.95px] leading-none font-bold tracking-[0.89px]">
+        <span className="-me-[0.89px] translate-x-[0.26px] -translate-y-[2.16px]">המרחב</span>
+      </span>
+    </span>
+  )
+}
+
+function HeaderMenuIcon() {
+  return (
+    <svg
+      aria-hidden="true"
+      className="block translate-x-[0.3px] translate-y-[0.6px]"
+      fill="none"
+      height="20"
+      stroke="currentColor"
+      strokeLinecap="round"
+      strokeWidth={2}
+      viewBox="0 0 20 20"
+      width="20"
+    >
+      <path d="M3.35 5.4H16.65M3.35 10H16.65M3.35 14.6H16.65" />
+    </svg>
+  )
+}
+
 function AppHeader() {
   return (
-    <header className="sticky top-0 z-10 bg-canvas/90 pt-[env(safe-area-inset-top)] backdrop-blur-md">
-      <div className="grid h-16 grid-cols-[1fr_auto_1fr] items-center px-4">
-        <IconButton className="justify-self-start" label="פתח תפריט">
-          <MenuIcon />
-        </IconButton>
-        <img alt="המרחב" className="h-10 w-auto" height={40} src={imgLogo} width={121} />
+    <header className="sticky top-0 z-10 bg-header pt-[env(safe-area-inset-top)] pb-[2.5px]">
+      <div className="relative flex h-[54px] items-center justify-center">
         <button
-          className={`inline-flex h-10 items-center gap-1 justify-self-end rounded-control bg-sand ps-3 pe-2 text-meta font-semibold text-ink active:bg-line ${pressable}`}
+          aria-label="פתח תפריט"
+          className={`absolute start-[13.5px] top-1/2 flex size-[40.75px] -translate-y-1/2 items-center justify-center rounded-control bg-header-control text-ink ${pressable}`}
           type="button"
         >
-          <MapPinIcon size={16} />
-          <span className="ms-1">תל אביב</span>
-          <ChevronDownIcon className="text-ink-muted" size={16} />
+          <HeaderMenuIcon />
+        </button>
+        <Logo />
+        <button
+          className={`absolute end-4 top-1/2 flex h-[34.25px] -translate-y-1/2 items-center rounded-control before:absolute before:inset-x-0 before:-inset-y-[5px] before:content-[''] bg-header-control ps-[8.6px] pe-[12.6px] text-meta font-normal text-ink ${pressable}`}
+          type="button"
+        >
+          <ChevronDownIcon className="text-header-icon" size={16.5} strokeWidth={2.1} />
+          <span className="ms-[4.9px] me-[5.1px]">תל אביב</span>
+          <MapPinIcon className="translate-y-[0.8px] text-header-icon" size={18.4} strokeWidth={2.1} />
         </button>
       </div>
     </header>
