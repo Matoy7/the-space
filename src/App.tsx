@@ -375,7 +375,7 @@ function FeaturedCarousel() {
           <button
             aria-current={index === active ? "true" : undefined}
             aria-label={`מעבר לשקופית ${index + 1}: ${slide.title}`}
-            className="group flex h-10 items-center px-1"
+            className="group flex h-10 items-center px-2"
             key={slide.title}
             onClick={() => goTo(index)}
             type="button"
