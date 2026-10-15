@@ -28,7 +28,7 @@ const locations = ["גליל עליון", "גליל מערבי", "תל אביב"
 
 /* Listed in reading order (right → left in RTL). */
 const categories = [
-  { name: "יוגה", image: images.yoga, active: true },
+  { name: "יוגה", image: images.yoga },
   { name: "מדיטציה", image: images.meditation },
   { name: "סדנאות", image: images.workshops },
   { name: "ריטריטים", image: images.retreats },
@@ -97,40 +97,46 @@ function AppHeader({
   )
 }
 
-function CategoryStrip() {
+/** Story-style category circles. Tapping one selects it (single selection). There is no category data on events yet,
+    so selection is visual only and does not filter the lists. */
+function CategoryStrip({ selected, onSelect }: { selected: string; onSelect: (name: string) => void }) {
   return (
     <nav aria-label="קטגוריות">
       <ul className="flex snap-x gap-4 overflow-x-auto scroll-px-4 px-4 py-1">
-        {categories.map((category) => (
-          <li className="shrink-0 snap-start" key={category.name}>
-            <button
-              aria-current={category.active ? "page" : undefined}
-              className="group flex w-16 flex-col items-center gap-2"
-              type="button"
-            >
-              <span
-                className={`flex size-16 items-center justify-center rounded-full border-2 p-0.5 transition-transform duration-150 group-active:scale-95 ${
-                  category.active ? "border-accent" : "border-transparent"
-                }`}
+        {categories.map((category) => {
+          const isSelected = category.name === selected
+          return (
+            <li className="shrink-0 snap-start" key={category.name}>
+              <button
+                aria-pressed={isSelected}
+                className="group flex w-16 flex-col items-center gap-2"
+                onClick={() => onSelect(category.name)}
+                type="button"
               >
-                <img
-                  alt=""
-                  className="size-full rounded-full object-cover"
-                  height={56}
-                  src={category.image}
-                  width={56}
-                />
-              </span>
-              <span
-                className={`text-meta whitespace-nowrap ${
-                  category.active ? "font-bold text-ink" : "font-medium text-ink-muted"
-                }`}
-              >
-                {category.name}
-              </span>
-            </button>
-          </li>
-        ))}
+                <span
+                  className={`flex size-16 items-center justify-center rounded-full border-2 p-0.5 transition-[border-color,transform] duration-200 group-active:scale-95 motion-reduce:transition-none ${
+                    isSelected ? "border-accent" : "border-transparent"
+                  }`}
+                >
+                  <img
+                    alt=""
+                    className="size-full rounded-full object-cover"
+                    height={56}
+                    src={category.image}
+                    width={56}
+                  />
+                </span>
+                <span
+                  className={`text-meta whitespace-nowrap transition-colors duration-200 ${
+                    isSelected ? "font-bold text-ink" : "font-medium text-ink-muted"
+                  }`}
+                >
+                  {category.name}
+                </span>
+              </button>
+            </li>
+          )
+        })}
       </ul>
     </nav>
   )
@@ -436,7 +442,17 @@ function useRoute() {
   return { route, goHome }
 }
 
-function HomePage({ location, setLocation }: { location: string; setLocation: (next: string) => void }) {
+function HomePage({
+  category,
+  location,
+  setCategory,
+  setLocation,
+}: {
+  category: string
+  location: string
+  setCategory: (next: string) => void
+  setLocation: (next: string) => void
+}) {
   const [menuOpen, setMenuOpen] = useState(false)
   const menuButtonRef = useRef<HTMLButtonElement>(null)
   const [locationOpen, setLocationOpen] = useState(false)
@@ -453,7 +469,7 @@ function HomePage({ location, setLocation }: { location: string; setLocation: (n
         onOpenMenu={() => setMenuOpen(true)}
       />
       <main className="flex flex-col gap-8 pt-2 pb-8">
-        <CategoryStrip />
+        <CategoryStrip onSelect={setCategory} selected={category} />
         <FeaturedCarousel />
         <UpcomingEvents />
         <FeaturedRetreats />
@@ -479,12 +495,13 @@ function App() {
   const { route, goHome } = useRoute()
   // Lives above the router so the chosen area survives a visit to an event page.
   const [location, setLocation] = useState<string>("תל אביב")
+  const [category, setCategory] = useState<string>(categories[0].name)
   return (
     <FavoritesProvider>
       {route.name === "event" ? (
         <EventPage event={events[route.id]} key={route.id} onBack={goHome} />
       ) : (
-        <HomePage location={location} setLocation={setLocation} />
+        <HomePage category={category} location={location} setCategory={setCategory} setLocation={setLocation} />
       )}
     </FavoritesProvider>
   )

@@ -14,7 +14,14 @@ export const images = {
   yoga: asset("6d380.png"),
 }
 
-export type Host = { name: string; bio: string; photo: string }
+export type Host = {
+  name: string
+  /** Shown before the name, e.g. "מדריכה". */
+  role: string
+  bio?: string
+  /** Optional portrait; an initial is shown when missing. */
+  photo?: string
+}
 
 export type SiteEvent = {
   id: string
@@ -102,6 +109,42 @@ export const events: Record<string, SiteEvent> = {
     image: asset("54a2d.png"),
   },
 }
+
+/* ---------------------------------------------------------------------------------------------
+ * DEMO CONTENT — sample summaries and organizers written for the prototype (requested by the
+ * site owner). Not real event details: replace with the real text and names before launch.
+ * ------------------------------------------------------------------------------------------- */
+const demoDetails: Record<string, Pick<SiteEvent, "about" | "host">> = {
+  "yoga-by-the-sea": {
+    about: "סופשבוע של תרגול יוגה על החוף, עם שיעורי זריחה ושקיעה מול הים. בין השיעורים: מדיטציה מודרכת, תרגילי נשימה וזמן למנוחה. מתאים לכל הרמות ואין צורך בניסיון קודם. מומלץ להביא מזרן, מגבת ובקבוק מים.",
+    host: { name: "נועה לוי", role: "מדריכה", bio: "מורה ליוגה ויניאסה ומדיטציה" },
+  },
+  "yoga-among-olives": {
+    about: "שלושה ימים של יוגה בין עצי הזית של כפר ורדים: תרגול בוקר רך, הליכות בטבע ושיעורי ערב איטיים. נתארח במתחם כפרי עם ארוחות צמחוניות, ונשאיר זמן לשקט ולמנוחה. מתאים למתחילים ולמתרגלים ותיקים.",
+    host: { name: "יעל ברק", role: "מדריכה", bio: "מורה ליוגה האטה ויין" },
+  },
+  "crater-sunrise": {
+    about: "ריטריט קטן ושקט על שפת מכתש רמון. נקום לפני הזריחה למדיטציה מול הנוף, נתרגל יוגה בבוקר ונצא להליכות קצרות במדבר. בערבים נקיים מעגלי שיחה ותצפית כוכבים. מספר המקומות מוגבל כדי לשמור על אווירה אינטימית.",
+    host: { name: "אורי שחר", role: "מדריך", bio: "מנחה מדיטציה ומדריך טיולים במדבר" },
+  },
+  "sound-meditation": {
+    about: "ערב של הרפיה עמוקה בליווי קערות טיבטיות, גונג ופעמונים. נשכב בנוחות ונניח לצלילים להוביל את הנשימה ואת הגוף לשקט. אין צורך בניסיון קודם; כדאי להגיע בבגדים נוחים ולהביא שמיכה קלה.",
+    host: { name: "מאיה כהן", role: "מדריכה", bio: "מטפלת בצלילים ומנחת מדיטציה" },
+  },
+  "desert-vipassana": {
+    about: "שלושה ימים של שתיקה ותרגול ויפאסנה במדבר יהודה. נתרגל ישיבה והליכה מודעת, עם הנחיה קצרה בכל בוקר ושיחת סיכום בסוף כל יום. הלינה באוהלים פשוטים והארוחות צמחוניות. מתאים למי שכבר התנסה במדיטציה.",
+    host: { name: "דניאל אבירם", role: "מדריך", bio: "מורה לויפאסנה ולתרגול שתיקה" },
+  },
+  "galilee-yoga-retreat": {
+    about: "יום מלא של יוגה בנוף הגליל העליון: תרגול בוקר דינמי, סדנת נשימה אחר הצהריים ושיעור יין רגוע לסיום. ארוחת צהריים מקומית כלולה. מתאים לכל הרמות, עם התאמות למתחילים.",
+    host: { name: "תמר גולן", role: "מדריכה", bio: "מורה ליוגה אשטנגה ויין" },
+  },
+  "nature-connection": {
+    about: "ריטריט של יוגה וסדנאות בלב הטבע של הגליל העליון. בתוכנית: תרגול יוגה יומי, סדנת צמחי מרפא, הליכה מודעת ביער וערב סביב המדורה. נישן בבקתות עץ ונאכל ארוחות מבושלות מתוצרת מקומית.",
+    host: { name: "רון אלמוג", role: "מדריך", bio: "מורה ליוגה ומנחה סדנאות בטבע" },
+  },
+}
+for (const [id, details] of Object.entries(demoDetails)) Object.assign(events[id], details)
 
 /* Home page sections, in display order. */
 export const featuredIds = ["yoga-by-the-sea", "yoga-among-olives", "crater-sunrise"]

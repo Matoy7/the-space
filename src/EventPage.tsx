@@ -1,5 +1,5 @@
-import { useEffect, useRef, useState, type ReactNode } from "react"
-import { badgeLabel, eventHref, relatedEvents, splitLocation, type SiteEvent } from "./data"
+import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react"
+import { badgeLabel, eventHref, relatedEvents, splitLocation, type Host, type SiteEvent } from "./data"
 import { formatEventDates } from "./dates"
 import { CalendarIcon, ChevronBackIcon, ChevronForwardIcon, MapPinIcon, ShareIcon, TagIcon } from "./icons"
 import { DateBadge, FavoriteButton, RegisterButton, SectionHeader, pressable } from "./ui"
@@ -47,21 +47,63 @@ function RelatedCard({ event, showArea }: { event: SiteEvent; showArea: boolean 
   )
 }
 
+/** Short summary clamped to three lines; "להמשך קריאה" appears only when the text is actually cut off. */
 function About({ text }: { text: string }) {
   const [expanded, setExpanded] = useState(false)
+  const [overflows, setOverflows] = useState(false)
+  const ref = useRef<HTMLParagraphElement>(null)
+
+  useLayoutEffect(() => {
+    const el = ref.current
+    if (!el || expanded) return
+    const measure = () => setOverflows(el.scrollHeight > el.clientHeight + 1)
+    measure()
+    const observer = new ResizeObserver(measure)
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [text, expanded])
+
   return (
     <section className="border-t border-ink/10 py-6">
       <h2 className="text-title font-bold text-ink">על האירוע</h2>
-      <p className={`mt-2 text-body text-ink ${expanded ? "" : "line-clamp-3"}`}>{text}</p>
-      <button
-        aria-expanded={expanded}
-        className="-ms-2 mt-1 inline-flex h-10 items-center gap-1 rounded-control px-2 text-meta font-semibold text-accent active:bg-sand"
-        onClick={() => setExpanded((v) => !v)}
-        type="button"
-      >
-        {expanded ? "הצגת פחות" : "להמשך קריאה"}
-        <ChevronForwardIcon size={16} />
-      </button>
+      <p className={`mt-2 text-body text-ink ${expanded ? "" : "line-clamp-3"}`} id="event-about" ref={ref}>
+        {text}
+      </p>
+      {(overflows || expanded) && (
+        <button
+          aria-controls="event-about"
+          aria-expanded={expanded}
+          className="-ms-2 mt-1 inline-flex h-10 items-center gap-1 rounded-control px-2 text-meta font-semibold text-accent active:bg-sand"
+          onClick={() => setExpanded((v) => !v)}
+          type="button"
+        >
+          {expanded ? "הצגת פחות" : "להמשך קריאה"}
+          <ChevronForwardIcon size={16} />
+        </button>
+      )}
+    </section>
+  )
+}
+
+function HostRow({ host }: { host: Host }) {
+  return (
+    <section aria-label="מדריך האירוע" className="flex items-center gap-4 border-t border-ink/10 py-6">
+      {host.photo ? (
+        <img alt="" className="size-14 shrink-0 rounded-full object-cover" src={host.photo} />
+      ) : (
+        <span
+          aria-hidden="true"
+          className="flex size-14 shrink-0 items-center justify-center rounded-full bg-header-control text-heading font-bold text-ink"
+        >
+          {host.name.trim().charAt(0)}
+        </span>
+      )}
+      <div className="min-w-0 flex-1">
+        <h2 className="text-body font-bold text-ink">
+          {host.role}: {host.name}
+        </h2>
+        {host.bio && <p className="text-meta text-ink-muted">{host.bio}</p>}
+      </div>
     </section>
   )
 }
@@ -149,15 +191,7 @@ export default function EventPage({ event, onBack }: { event: SiteEvent; onBack:
 
         {event.about && <About text={event.about} />}
 
-        {event.host && (
-          <section className="flex items-center gap-4 border-t border-ink/10 py-6">
-            <img alt="" className="size-14 shrink-0 rounded-full object-cover" src={event.host.photo} />
-            <div className="min-w-0 flex-1">
-              <h2 className="text-body font-bold text-ink">מנחה: {event.host.name}</h2>
-              <p className="text-meta text-ink-muted">{event.host.bio}</p>
-            </div>
-          </section>
-        )}
+        {event.host && <HostRow host={event.host} />}
 
         <section className="border-t border-ink/10 pt-6 pb-2">
           <SectionHeader
