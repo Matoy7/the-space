@@ -365,12 +365,6 @@ function FeaturedRetreats() {
   )
 }
 
-/* Only destinations that exist on the site today (in-page sections). */
-const footerLinks = [
-  { label: "גילוי אירועים", href: "#events" },
-  { label: "ריטריטים", href: "#retreats" },
-]
-
 function SiteFooter() {
   const year = new Date().getFullYear()
   return (
@@ -379,24 +373,7 @@ function SiteFooter() {
       <p className="mt-4 max-w-[34ch] text-meta text-ink-muted">
         אירועי וולנס, סדנאות וריטריטים מכל הארץ, מרוכזים במקום אחד — כדי שיהיה קל למצוא את מה שמתאים לכם.
       </p>
-
-      <nav aria-label="ניווט בתחתית העמוד" className="mt-6 border-t border-ink/10">
-        <ul>
-          {footerLinks.map((link) => (
-            <li className="border-b border-ink/10" key={link.href}>
-              <a
-                className="flex h-12 items-center justify-between text-body font-semibold text-ink transition-colors active:text-accent"
-                href={link.href}
-              >
-                {link.label}
-                <ChevronForwardIcon className="text-ink-muted" size={16} />
-              </a>
-            </li>
-          ))}
-        </ul>
-      </nav>
-
-      <p className="mt-6 text-meta text-ink-muted">© {year} המרחב. כל הזכויות שמורות.</p>
+      <p className="mt-6 border-t border-ink/10 pt-6 text-meta text-ink-muted">© {year} המרחב. כל הזכויות שמורות.</p>
     </footer>
   )
 }
