@@ -53,3 +53,10 @@ export const ChevronDownIcon = createIcon(<path d="m7 10 5 5 5-5" />)
 
 /** "Forward" in an RTL interface points left. */
 export const ChevronForwardIcon = createIcon(<path d="m14 7-5 5 5 5" />)
+
+export const BellIcon = createIcon(
+  <>
+    <path d="M6 9a6 6 0 0 1 12 0c0 6.5 2.5 8 2.5 8h-17S6 15.5 6 9Z" />
+    <path d="M10.3 20.5a1.9 1.9 0 0 0 3.4 0" />
+  </>,
+)
