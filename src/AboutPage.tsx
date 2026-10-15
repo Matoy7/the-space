@@ -1,4 +1,5 @@
 import { useEffect } from "react"
+import { ContactCta } from "./ContactPage"
 
 const photo = (file: string) => `${import.meta.env.BASE_URL}assets/${file}`
 
@@ -34,6 +35,8 @@ export default function AboutPage() {
         אנחנו מאמינים בכוח של חוויות משמעותיות ליצור שינוי אמיתי, ולכן ריכזנו עבורכם מגוון פעילויות במקום אחד – כך
         שיהיה קל ונעים למצוא את מה שמתאים לכם.
       </p>
+
+      <ContactCta />
     </main>
   )
 }

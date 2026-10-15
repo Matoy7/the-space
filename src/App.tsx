@@ -1,5 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useState, type ReactNode, type RefObject } from "react"
 import AboutPage from "./AboutPage"
+import ContactPage from "./ContactPage"
 import EventPage from "./EventPage"
 import FavoritesProvider from "./favorites"
 import SideDrawer from "./SideDrawer"
@@ -375,12 +376,13 @@ function SiteFooter() {
   )
 }
 
-/* Hash routes keep deep links working on GitHub Pages: "#/event/<id>" is an event page, "#/about" the about page;
-   any other hash is the home page. */
-type Route = { name: "home" } | { name: "about" } | { name: "event"; id: string }
+/* Hash routes keep deep links working on GitHub Pages: "#/event/<id>" is an event page, "#/about" and "#/contact"
+   are pages; any other hash is the home page. */
+type Route = { name: "home" } | { name: "about" } | { name: "contact" } | { name: "event"; id: string }
 
 function parseRoute(hash: string): Route {
   if (hash === "#/about") return { name: "about" }
+  if (hash === "#/contact") return { name: "contact" }
   const match = hash.match(/^#\/event\/([\w-]+)$/)
   return match && events[match[1]] ? { name: "event", id: match[1] } : { name: "home" }
 }
@@ -434,7 +436,7 @@ function useRoute() {
 }
 
 /** Shared page chrome: the site header (logo, menu, bell) and its side menu. */
-function SiteShell({ current, children }: { current: "home" | "about"; children: ReactNode }) {
+function SiteShell({ current, children }: { current: "home" | "about" | "contact"; children: ReactNode }) {
   const [menuOpen, setMenuOpen] = useState(false)
   const menuButtonRef = useRef<HTMLButtonElement>(null)
   return (
@@ -471,6 +473,10 @@ function App() {
       ) : route.name === "about" ? (
         <SiteShell current="about">
           <AboutPage />
+        </SiteShell>
+      ) : route.name === "contact" ? (
+        <SiteShell current="contact">
+          <ContactPage />
         </SiteShell>
       ) : (
         <HomePage category={category} setCategory={setCategory} />
