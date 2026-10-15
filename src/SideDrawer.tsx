@@ -35,7 +35,7 @@ export default function SideDrawer({
   onClose: () => void
   returnFocusTo: React.RefObject<HTMLElement | null>
   /** Page currently shown, for the active state of page links. */
-  current?: "home" | "about" | "contact"
+  current?: "home" | "about" | "contact" | "listing"
 }) {
   const titleId = useId()
   const panelRef = useRef<HTMLDivElement>(null)

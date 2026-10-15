@@ -5,12 +5,14 @@ import { CalendarIcon, MapPinIcon } from "./icons"
    clean photo → [date · time | price] row → title → muted location. The whole card opens the event page,
    where registration lives. The featured (carousel) card keeps its title and location over the photo. */
 
-type CardSize = "featured" | "rail" | "wide" | "compact"
+type CardSize = "featured" | "rail" | "wide" | "compact" | "list"
 
 const sizes: Record<CardSize, { card: string; body: string; title: string; showTime: boolean }> = {
   featured: { card: "w-full", body: "p-5", title: "text-display", showTime: true },
   rail: { card: "w-60 shrink-0 snap-start", body: "p-4", title: "text-title", showTime: true },
   wide: { card: "w-[82vw] max-w-[340px] shrink-0 snap-start", body: "p-4", title: "text-title", showTime: true },
+  // Full-width card of the vertical listing pages.
+  list: { card: "w-full", body: "p-4", title: "text-title", showTime: true },
   // 160px cards: no time, so the date and price fit on one row.
   compact: { card: "w-40 shrink-0 snap-start", body: "p-3", title: "text-body", showTime: false },
 }

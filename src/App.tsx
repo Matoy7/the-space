@@ -1,11 +1,15 @@
 import { useEffect, useLayoutEffect, useRef, useState, type ReactNode, type RefObject } from "react"
 import AboutPage from "./AboutPage"
 import EventCard from "./EventCard"
+import ListingPage from "./ListingPage"
 import ContactPage from "./ContactPage"
 import EventPage from "./EventPage"
 import SideDrawer from "./SideDrawer"
 import {
   byIds,
+  listingHref,
+  listings,
+  type ListingId,
   events,
   featuredIds,
   images,
@@ -261,7 +265,7 @@ const anchorOffset = "scroll-mt-[calc(env(safe-area-inset-top)+64px)]"
 function UpcomingEvents() {
   return (
     <section className={`flex flex-col gap-4 ${anchorOffset}`} id="events">
-      <SectionHeader title="אירועים קרובים" />
+      <SectionHeader actionHref={listingHref("events")} title="אירועים קרובים" />
       <div className={cardRail}>
         {eventCards.map((event) => (
           <EventCard event={event} key={event.id} size="rail" />
@@ -274,7 +278,7 @@ function UpcomingEvents() {
 function FeaturedRetreats() {
   return (
     <section className={`flex flex-col gap-4 ${anchorOffset}`} id="retreats">
-      <SectionHeader title="ריטריטים נבחרים" />
+      <SectionHeader actionHref={listingHref("retreats")} title="ריטריטים נבחרים" />
       <div aria-label="ריטריטים נבחרים" className={cardRail} role="list">
         {selectedRetreats.map((event) => (
           <div className="flex shrink-0 snap-start" key={event.id} role="listitem">
@@ -299,67 +303,77 @@ function SiteFooter() {
   )
 }
 
-/* Hash routes keep deep links working on GitHub Pages: "#/event/<id>" is an event page, "#/about" and "#/contact"
-   are pages; any other hash is the home page. */
-type Route = { name: "home" } | { name: "about" } | { name: "contact" } | { name: "event"; id: string }
+/* Hash routes keep deep links working on GitHub Pages: "#/event/<id>" is an event page, "#/events" and "#/retreats"
+   are full listings ("הצג הכל"), "#/about" and "#/contact" are pages; any other hash is the home page. */
+type Route =
+  | { name: "home" }
+  | { name: "about" }
+  | { name: "contact" }
+  | { name: "event"; id: string }
+  | { name: "listing"; id: ListingId }
 
 function parseRoute(hash: string): Route {
   if (hash === "#/about") return { name: "about" }
   if (hash === "#/contact") return { name: "contact" }
+  const listing = hash.slice(2)
+  if (hash.startsWith("#/") && Object.prototype.hasOwnProperty.call(listings, listing)) return { name: "listing", id: listing as ListingId }
   const match = hash.match(/^#\/event\/([\w-]+)$/)
   return match && events[match[1]] ? { name: "event", id: match[1] } : { name: "home" }
 }
 
 function useRoute() {
   const [route, setRoute] = useState<Route>(() => parseRoute(window.location.hash))
-  const routeRef = useRef(route)
-  const homeScrollY = useRef(0)
-  // True when the current event page was opened from the home page in this session, so "back" can use history.
-  const openedFromHome = useRef(false)
+  // This tab's in-app history (hashes), so "back" returns to the page the visitor came from.
+  const stack = useRef<string[]>([window.location.hash])
+  // Scroll position of each page when it was left, restored when coming back to it.
+  const scrollByHash = useRef(new Map<string, number>())
+  const isReturn = useRef(false)
 
   useEffect(() => {
     if ("scrollRestoration" in history) history.scrollRestoration = "manual"
     const onHashChange = () => {
-      const next = parseRoute(window.location.hash)
-      const prev = routeRef.current
-      if (prev.name === "home" && next.name !== "home") homeScrollY.current = window.scrollY
-      if (prev.name === "home" && next.name === "event") openedFromHome.current = true
-      routeRef.current = next
-      setRoute(next)
+      const hash = window.location.hash
+      const s = stack.current
+      scrollByHash.current.set(s[s.length - 1], window.scrollY)
+      isReturn.current = s.length > 1 && s[s.length - 2] === hash
+      if (isReturn.current) s.pop()
+      else s.push(hash)
+      setRoute(parseRoute(hash))
     }
     window.addEventListener("hashchange", onHashChange)
     return () => window.removeEventListener("hashchange", onHashChange)
   }, [])
 
-  // Event pages open at the top; returning home restores the previous position (or jumps to a section anchor).
+  // Returning to a page restores its position; otherwise pages open at the top (home: at a section anchor if given).
   useLayoutEffect(() => {
-    if (route.name !== "home") {
-      window.scrollTo({ top: 0, behavior: "instant" })
+    const saved = scrollByHash.current.get(window.location.hash)
+    if (isReturn.current && saved !== undefined) {
+      window.scrollTo({ top: saved, behavior: "instant" })
       return
     }
-    const anchor = window.location.hash.slice(1)
+    const anchor = route.name === "home" ? window.location.hash.slice(1) : ""
     const target = anchor ? document.getElementById(anchor) : null
     if (target) target.scrollIntoView({ block: "start", behavior: "instant" })
-    else window.scrollTo({ top: homeScrollY.current, behavior: "instant" })
+    else window.scrollTo({ top: 0, behavior: "instant" })
   }, [route])
 
-  const goHome = () => {
-    if (openedFromHome.current) {
-      openedFromHome.current = false
+  const goBack = () => {
+    if (stack.current.length > 1) {
       history.back()
       return
     }
+    // Opened directly from a link: there is no previous page in the site, so go to the home page.
     history.replaceState(null, "", window.location.pathname + window.location.search)
-    routeRef.current = { name: "home" }
-    homeScrollY.current = 0
+    stack.current = [""]
+    isReturn.current = false
     setRoute({ name: "home" })
   }
 
-  return { route, goHome }
+  return { route, goBack }
 }
 
 /** Shared page chrome: the site header (logo, menu, bell) and its side menu. */
-function SiteShell({ current, children }: { current: "home" | "about" | "contact"; children: ReactNode }) {
+function SiteShell({ current, children }: { current: "home" | "about" | "contact" | "listing"; children: ReactNode }) {
   const [menuOpen, setMenuOpen] = useState(false)
   const menuButtonRef = useRef<HTMLButtonElement>(null)
   return (
@@ -386,13 +400,17 @@ function HomePage({ category, setCategory }: { category: string; setCategory: (n
 }
 
 function App() {
-  const { route, goHome } = useRoute()
+  const { route, goBack } = useRoute()
   // Lives above the router so the chosen category survives a visit to an event page.
   const [category, setCategory] = useState<string>(categories[0].name)
   return (
     <>
       {route.name === "event" ? (
-        <EventPage event={events[route.id]} key={route.id} onBack={goHome} />
+        <EventPage event={events[route.id]} key={route.id} onBack={goBack} />
+      ) : route.name === "listing" ? (
+        <SiteShell current="listing">
+          <ListingPage id={route.id} key={route.id} onBack={goBack} />
+        </SiteShell>
       ) : route.name === "about" ? (
         <SiteShell current="about">
           <AboutPage />

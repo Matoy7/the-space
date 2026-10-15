@@ -3,34 +3,28 @@ import { ChevronForwardIcon } from "./icons"
 
 export const pressable = "transition-[background-color,transform] duration-150 active:scale-[0.97]"
 
-/** Section title with a trailing text action (a link when `actionHref` is given). */
+/** Section title with a trailing "show all" link to the section's full listing. */
 export function SectionHeader({
   title,
-  actionLabel = "הצג הכל",
   actionHref,
+  actionLabel = "הצג הכל",
   className = "px-4",
 }: {
   title: string
+  actionHref: string
   actionLabel?: string
-  actionHref?: string
   className?: string
 }) {
-  const actionClass =
-    "-me-2 inline-flex h-10 shrink-0 items-center gap-1 rounded-control px-2 text-meta font-semibold text-accent transition-colors active:bg-sand"
   return (
     <header className={`flex items-center justify-between gap-4 ${className}`}>
       <h2 className="text-heading font-bold text-ink">{title}</h2>
-      {actionHref ? (
-        <a className={actionClass} href={actionHref}>
-          {actionLabel}
-          <ChevronForwardIcon size={16} />
-        </a>
-      ) : (
-        <button className={actionClass} type="button">
-          {actionLabel}
-          <ChevronForwardIcon size={16} />
-        </button>
-      )}
+      <a
+        className="-me-2 inline-flex h-10 shrink-0 items-center gap-1 rounded-control px-2 text-meta font-semibold text-accent transition-colors active:bg-sand"
+        href={actionHref}
+      >
+        {actionLabel}
+        <ChevronForwardIcon size={16} />
+      </a>
     </header>
   )
 }

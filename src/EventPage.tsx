@@ -1,5 +1,5 @@
 import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react"
-import { badgeLabel, priceLabel, relatedEvents, sharePath, splitLocation, type Host, type SiteEvent } from "./data"
+import { badgeLabel, listingHref, priceLabel, relatedEvents, sharePath, splitLocation, type Host, type SiteEvent } from "./data"
 import { formatEventDates } from "./dates"
 import { CalendarIcon, ChevronBackIcon, ChevronForwardIcon, MapPinIcon, ShareIcon, TagIcon } from "./icons"
 import EventCard from "./EventCard"
@@ -174,7 +174,7 @@ export default function EventPage({ event, onBack }: { event: SiteEvent; onBack:
 
         <section className="border-t border-ink/10 pt-6 pb-2">
           <SectionHeader
-            actionHref="#events"
+            actionHref={listingHref("events")}
             actionLabel="צפייה בכל האירועים"
             className=""
             title={related.sameArea ? `עוד ב${event.area}` : "אירועים נוספים"}

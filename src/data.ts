@@ -164,6 +164,34 @@ export const selectedRetreatIds = ["nature-connection", "galilee-yoga-retreat", 
 
 export const byIds = (ids: string[]) => ids.map((id) => events[id])
 
+/* Full collections behind each "הצג הכל" (listing pages), derived from the same data — no separate lists.
+   Order: the home section's items first, in their order, then the rest of the collection in data order. */
+const leadWith = (lead: string[], pool: SiteEvent[]) => {
+  const rank = (e: SiteEvent) => (lead.includes(e.id) ? lead.indexOf(e.id) : lead.length)
+  // Stable sort: lead items in their section order, everything else keeps data order.
+  return [...pool].sort((a, b) => rank(a) - rank(b))
+}
+
+/** Events the site presents as retreats: the retreat carousel and the selected-retreats rail. */
+const retreatIds = new Set([...featuredIds, ...selectedRetreatIds])
+
+export const listings = {
+  events: {
+    title: "אירועים וסדנאות",
+    emptyText: "אין כרגע אירועים להצגה",
+    items: () => leadWith(upcomingIds, Object.values(events)),
+  },
+  retreats: {
+    title: "ריטריטים",
+    emptyText: "אין כרגע ריטריטים להצגה",
+    items: () => leadWith(selectedRetreatIds, Object.values(events).filter((e) => retreatIds.has(e.id))),
+  },
+}
+
+export type ListingId = keyof typeof listings
+
+export const listingHref = (id: ListingId) => `#/${id}`
+
 export const eventHref = (id: string) => `#/event/${id}`
 
 /** Path of the static share page for an event (has its own link-preview tags; opens the event page). */
