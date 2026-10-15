@@ -43,10 +43,6 @@ export const CalendarIcon = createIcon(
   </>,
 )
 
-export const HeartIcon = createIcon(
-  <path d="M19.4 5.6a5 5 0 0 0-7.1 0L12 6l-.3-.4a5 5 0 0 0-7.1 7.1L12 20l7.4-7.3a5 5 0 0 0 0-7.1Z" />,
-)
-
 export const MenuIcon = createIcon(<path d="M4 7h16M4 12h16M4 17h16" />)
 
 export const ChevronDownIcon = createIcon(<path d="m7 10 5 5 5-5" />)

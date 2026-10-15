@@ -1,12 +1,11 @@
 import { useEffect, useLayoutEffect, useRef, useState, type ReactNode, type RefObject } from "react"
 import AboutPage from "./AboutPage"
+import EventCard from "./EventCard"
 import ContactPage from "./ContactPage"
 import EventPage from "./EventPage"
-import FavoritesProvider from "./favorites"
 import SideDrawer from "./SideDrawer"
 import {
   byIds,
-  eventHref,
   events,
   featuredIds,
   images,
@@ -14,8 +13,8 @@ import {
   upcomingIds,
   type SiteEvent,
 } from "./data"
-import { BellIcon, MapPinIcon, MenuIcon } from "./icons"
-import { DateBadge, FavoriteButton, MetaItem, PriceBadge, RegisterButton, SectionHeader, pressable } from "./ui"
+import { BellIcon, MenuIcon } from "./icons"
+import { SectionHeader, pressable } from "./ui"
 
 const featuredRetreats = byIds(featuredIds)
 const eventCards = byIds(upcomingIds)
@@ -134,39 +133,19 @@ function FeaturedSlide({
   index: number
   total: number
 }) {
-  const { id, image, location, title } = event
   return (
-    <article
+    <div
       aria-hidden={!active}
       aria-label={`${index + 1} מתוך ${total}`}
       aria-roledescription="שקופית"
-      className={`absolute inset-0 flex flex-col justify-end p-6 text-white transition-opacity duration-500 ease-out motion-reduce:transition-none ${
+      className={`col-start-1 row-start-1 flex transition-opacity duration-500 ease-out motion-reduce:transition-none ${
         active ? "z-[1] opacity-100" : "pointer-events-none opacity-0"
       }`}
       inert={!active}
       role="group"
     >
-      <img
-        alt=""
-        className="pointer-events-none absolute inset-0 size-full object-cover"
-        draggable={false}
-        src={image}
-      />
-      <div className="absolute inset-x-0 bottom-0 h-3/4 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
-      {/* The whole slide opens the event page; text lets taps through, the buttons sit above it. */}
-      <a aria-label={title} className="absolute inset-0" href={eventHref(id)} />
-      <FavoriteButton className="absolute start-4 top-4 z-[1]" id={id} />
-      <DateBadge event={event} inset="end-4 top-4" />
-
-      <h2 className="pointer-events-none relative text-display font-bold">{title}</h2>
-      <div className="pointer-events-none relative mt-1 text-meta text-white/90">
-        <MetaItem icon={<MapPinIcon size={16} />}>{location}</MetaItem>
-      </div>
-      <div className="relative mt-4 flex items-center">
-        <RegisterButton event={event} variant="overlay" />
-      </div>
-      <PriceBadge event={event} inset="end-6 bottom-7" />
-    </article>
+      <EventCard event={event} size="featured" />
+    </div>
   )
 }
 
@@ -227,7 +206,7 @@ function FeaturedCarousel() {
     >
       <div
         aria-live={paused ? "polite" : "off"}
-        className="relative aspect-[5/4] touch-pan-y overflow-hidden rounded-feature bg-hero select-none"
+        className="grid touch-pan-y select-none"
         onClickCapture={(e) => {
           if (!suppressClick.current) return
           suppressClick.current = false
@@ -273,34 +252,6 @@ function FeaturedCarousel() {
   )
 }
 
-function EventCard({ event }: { event: SiteEvent }) {
-  const { id, image, location, title } = event
-  return (
-    <article className="relative flex w-60 shrink-0 snap-start flex-col overflow-hidden rounded-card border border-line/60 bg-surface shadow-card">
-      <div className="relative aspect-[3/2] overflow-hidden bg-sand">
-        <img alt="" className="size-full object-cover" src={image} />
-        <PriceBadge event={event} />
-      </div>
-      <FavoriteButton className="absolute start-2 top-2 z-[1]" id={id} />
-      <DateBadge event={event} />
-      <div className="flex flex-1 flex-col p-4">
-        <h3 className="text-title font-bold text-ink">
-          {/* The ::after overlay makes the whole card the tap target for this link. */}
-          <a className="after:absolute after:inset-0 after:content-['']" href={eventHref(id)}>
-            {title}
-          </a>
-        </h3>
-        <p className="mt-1 text-meta text-ink-muted">{location}</p>
-        <div className="mt-auto pt-4">
-          <div className="border-t border-line pt-4">
-            <RegisterButton className="w-full" event={event} />
-          </div>
-        </div>
-      </div>
-    </article>
-  )
-}
-
 /* Horizontal card rail (events, retreats): native RTL scrolling with snap; the next card peeks in. */
 const cardRail = "flex snap-x snap-mandatory gap-4 overflow-x-auto overscroll-x-contain scroll-px-4 px-4 pb-2"
 
@@ -313,38 +264,10 @@ function UpcomingEvents() {
       <SectionHeader title="אירועים קרובים" />
       <div className={cardRail}>
         {eventCards.map((event) => (
-          <EventCard event={event} key={event.id} />
+          <EventCard event={event} key={event.id} size="rail" />
         ))}
       </div>
     </section>
-  )
-}
-
-function RetreatCard({ event }: { event: SiteEvent }) {
-  const { id, image, location, subtitle, title } = event
-  return (
-    <article className="relative flex w-[82vw] max-w-[340px] shrink-0 overflow-hidden rounded-card border border-line/60 bg-surface shadow-card">
-      <div className="flex min-w-0 flex-1 flex-col p-4">
-        <h3 className="text-title font-bold text-ink">
-          {/* The ::after overlay makes the whole card the tap target for this link. */}
-          <a className="after:absolute after:inset-0 after:content-['']" href={eventHref(id)}>
-            {title}
-          </a>
-        </h3>
-        {subtitle && <p className="mt-1 text-meta text-ink-muted">{subtitle}</p>}
-        <div className="mt-4 text-meta text-ink-muted">
-          <MetaItem icon={<MapPinIcon size={16} />}>{location}</MetaItem>
-        </div>
-        <div className="mt-auto pt-4">
-          <RegisterButton event={event} />
-        </div>
-      </div>
-      <div className="relative w-[42%] shrink-0 bg-sand">
-        <img alt="" className="size-full object-cover" draggable={false} src={image} />
-        <DateBadge event={event} />
-        <PriceBadge event={event} />
-      </div>
-    </article>
   )
 }
 
@@ -355,7 +278,7 @@ function FeaturedRetreats() {
       <div aria-label="ריטריטים נבחרים" className={cardRail} role="list">
         {selectedRetreats.map((event) => (
           <div className="flex shrink-0 snap-start" key={event.id} role="listitem">
-            <RetreatCard event={event} />
+            <EventCard event={event} size="wide" />
           </div>
         ))}
       </div>
@@ -467,7 +390,7 @@ function App() {
   // Lives above the router so the chosen category survives a visit to an event page.
   const [category, setCategory] = useState<string>(categories[0].name)
   return (
-    <FavoritesProvider>
+    <>
       {route.name === "event" ? (
         <EventPage event={events[route.id]} key={route.id} onBack={goHome} />
       ) : route.name === "about" ? (
@@ -481,7 +404,7 @@ function App() {
       ) : (
         <HomePage category={category} setCategory={setCategory} />
       )}
-    </FavoritesProvider>
+    </>
   )
 }
 

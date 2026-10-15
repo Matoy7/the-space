@@ -11,7 +11,6 @@ const primaryNav: NavItem[] = [
   { label: "אירועים וסדנאות", target: "events" },
   { label: "תרגולים שבועיים" },
   { label: "ריטריטים", target: "retreats" },
-  { label: "המועדפים שלי" },
 ]
 
 function ComingSoon() {

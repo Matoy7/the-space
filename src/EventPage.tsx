@@ -1,8 +1,9 @@
 import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react"
-import { badgeLabel, eventHref, priceLabel, relatedEvents, sharePath, splitLocation, type Host, type SiteEvent } from "./data"
+import { badgeLabel, priceLabel, relatedEvents, sharePath, splitLocation, type Host, type SiteEvent } from "./data"
 import { formatEventDates } from "./dates"
 import { CalendarIcon, ChevronBackIcon, ChevronForwardIcon, MapPinIcon, ShareIcon, TagIcon } from "./icons"
-import { DateBadge, FavoriteButton, PriceBadge, RegisterButton, SectionHeader, pressable } from "./ui"
+import EventCard from "./EventCard"
+import { RegisterButton, SectionHeader, pressable } from "./ui"
 
 /* Composition follows the approved reference (390px): 183px of photo above a sheet with 24px rounded corners,
    ~58px detail rows with 40px icon circles, a small-card rail, and a fixed registration bar. The reference is laid
@@ -20,31 +21,6 @@ function DetailRow({ icon, primary, secondary, action }: { icon: ReactNode; prim
       </span>
       {action}
     </li>
-  )
-}
-
-function RelatedCard({ event, showArea }: { event: SiteEvent; showArea: boolean }) {
-  return (
-    <article className="relative flex w-40 shrink-0 snap-start flex-col overflow-hidden rounded-card border border-line/60 bg-surface shadow-card">
-      <div className="relative aspect-[3/2] bg-sand">
-        <img alt="" className="size-full object-cover" draggable={false} src={event.image} />
-        <DateBadge event={event} showTime={false} />
-        <PriceBadge event={event} />
-      </div>
-      <FavoriteButton className="absolute start-2 top-2 z-[1]" id={event.id} tone="compact" />
-      <div className="flex flex-1 flex-col px-3 pt-2 pb-3">
-        <h3 className="truncate text-body font-bold text-ink">
-          <a className="after:absolute after:inset-0 after:content-['']" href={eventHref(event.id)}>
-            {event.title}
-          </a>
-        </h3>
-        {/* Inside "עוד ב<area>" the area is implied; the date is on the photo. */}
-        {showArea && <p className="truncate text-meta text-ink-muted">{event.area}</p>}
-        <div className="mt-auto pt-2">
-          <RegisterButton className="w-full" event={event} />
-        </div>
-      </div>
-    </article>
   )
 }
 
@@ -163,7 +139,6 @@ export default function EventPage({ event, onBack }: { event: SiteEvent; onBack:
             <button aria-label="שיתוף" className={heroControl} onClick={share} type="button">
               <ShareIcon />
             </button>
-            <FavoriteButton id={event.id} tone="light" />
           </div>
         </div>
       </div>
@@ -206,7 +181,7 @@ export default function EventPage({ event, onBack }: { event: SiteEvent; onBack:
           />
           <div className="-mx-4 mt-4 flex snap-x snap-mandatory gap-2 overflow-x-auto overscroll-x-contain scroll-px-4 px-4 pb-2">
             {related.items.map((item) => (
-              <RelatedCard event={item} key={item.id} showArea={!related.sameArea} />
+              <EventCard event={item} key={item.id} size="compact" />
             ))}
           </div>
         </section>
