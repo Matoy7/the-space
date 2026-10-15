@@ -1,5 +1,6 @@
 import { useEffect, useId, useRef } from "react"
 import { CloseIcon } from "./icons"
+import { trapTab, useModal } from "./useModal"
 
 const logoSrc = `${import.meta.env.BASE_URL}assets/77585.png`
 
@@ -12,8 +13,6 @@ const primaryNav: NavItem[] = [
   { label: "ריטריטים", target: "retreats" },
   { label: "המועדפים שלי" },
 ]
-
-const FOCUSABLE = 'a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])'
 
 function ComingSoon() {
   return (
@@ -35,32 +34,17 @@ export default function SideDrawer({
   const closeRef = useRef<HTMLButtonElement>(null)
   // Section to scroll to once the drawer has closed and page scrolling is unlocked.
   const pendingTarget = useRef<string | null>(null)
-  const wasOpen = useRef(false)
+  useModal(open, closeRef, returnFocusTo)
 
+  // After the drawer has closed (scroll unlocked, focus restored), jump to the chosen section.
   useEffect(() => {
-    if (open) {
-      wasOpen.current = true
-      // Lock only the root (the page's scroller). Locking <body> too would make it a clipped
-      // 100%-height scroll box and reset the page to the top.
-      const root = document.documentElement
-      const prevOverflow = root.style.overflow
-      root.style.overflow = "hidden"
-      closeRef.current?.focus({ preventScroll: true })
-      return () => {
-        root.style.overflow = prevOverflow
-      }
-    }
-    if (!wasOpen.current) return
-    wasOpen.current = false
-    returnFocusTo.current?.focus({ preventScroll: true })
+    if (open || !pendingTarget.current) return
     const target = pendingTarget.current
     pendingTarget.current = null
-    if (target) {
-      const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches
-      document.getElementById(target)?.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "start" })
-      history.replaceState(null, "", `#${target}`)
-    }
-  }, [open, returnFocusTo])
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches
+    document.getElementById(target)?.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "start" })
+    history.replaceState(null, "", `#${target}`)
+  }, [open])
 
   // Escape closes; Tab stays inside the drawer while it is open.
   const onKeyDown = (e: React.KeyboardEvent) => {
@@ -69,18 +53,7 @@ export default function SideDrawer({
       onClose()
       return
     }
-    if (e.key !== "Tab" || !panelRef.current) return
-    const items = [...panelRef.current.querySelectorAll<HTMLElement>(FOCUSABLE)]
-    if (items.length === 0) return
-    const first = items[0]
-    const last = items[items.length - 1]
-    if (e.shiftKey && document.activeElement === first) {
-      e.preventDefault()
-      last.focus()
-    } else if (!e.shiftKey && document.activeElement === last) {
-      e.preventDefault()
-      first.focus()
-    }
+    trapTab(e, panelRef.current)
   }
 
   const navigate = (e: React.MouseEvent, target: string) => {

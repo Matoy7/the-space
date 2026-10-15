@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type ReactNode, type RefObject } from "react"
+import LocationSheet from "./LocationSheet"
 import SideDrawer from "./SideDrawer"
 import {
   BellIcon,
@@ -49,6 +50,9 @@ const featuredRetreats = [
 
 const AUTOPLAY_MS = 2500
 const SWIPE_THRESHOLD_PX = 40
+
+/* Areas that appear in the site's events and retreats, north to south. No location-based filtering exists yet. */
+const locations = ["גליל עליון", "גליל מערבי", "תל אביב", "מדבר יהודה", "מצפה רמון"] as const
 
 /* Listed in reading order (right → left in RTL). */
 const categories = [
@@ -145,12 +149,20 @@ function SectionHeader({ title }: { title: string }) {
 const headerControl = `flex h-10 items-center justify-center rounded-control bg-header-control text-ink active:bg-line ${pressable}`
 
 function AppHeader({
+  location,
+  locationButtonRef,
+  locationOpen,
   menuButtonRef,
   menuOpen,
+  onOpenLocation,
   onOpenMenu,
 }: {
+  location: string
+  locationButtonRef: RefObject<HTMLButtonElement | null>
+  locationOpen: boolean
   menuButtonRef: RefObject<HTMLButtonElement | null>
   menuOpen: boolean
+  onOpenLocation: () => void
   onOpenMenu: () => void
 }) {
   return (
@@ -171,12 +183,17 @@ function AppHeader({
           <MenuIcon />
         </button>
         <button
-          aria-label="מיקום: תל אביב. החלפת מיקום"
+          aria-controls="location-sheet"
+          aria-expanded={locationOpen}
+          aria-haspopup="dialog"
+          aria-label={`מיקום: ${location}. החלפת אזור`}
           className={`${headerControl} gap-2 justify-self-center ps-3 pe-2 text-meta font-semibold whitespace-nowrap`}
+          onClick={onOpenLocation}
+          ref={locationButtonRef}
           type="button"
         >
           <MapPinIcon />
-          <span>תל אביב</span>
+          <span>{location}</span>
           <ChevronDownIcon className="text-ink-muted" size={16} />
         </button>
         <button aria-label="התראות" className={`${headerControl} w-10 justify-self-end`} type="button">
@@ -502,9 +519,20 @@ function SiteFooter() {
 function App() {
   const [menuOpen, setMenuOpen] = useState(false)
   const menuButtonRef = useRef<HTMLButtonElement>(null)
+  const [location, setLocation] = useState<string>("תל אביב")
+  const [locationOpen, setLocationOpen] = useState(false)
+  const locationButtonRef = useRef<HTMLButtonElement>(null)
   return (
     <div className="min-h-full bg-canvas">
-      <AppHeader menuButtonRef={menuButtonRef} menuOpen={menuOpen} onOpenMenu={() => setMenuOpen(true)} />
+      <AppHeader
+        location={location}
+        locationButtonRef={locationButtonRef}
+        locationOpen={locationOpen}
+        menuButtonRef={menuButtonRef}
+        menuOpen={menuOpen}
+        onOpenLocation={() => setLocationOpen(true)}
+        onOpenMenu={() => setMenuOpen(true)}
+      />
       <main className="flex flex-col gap-8 pt-2 pb-8">
         <CategoryStrip />
         <FeaturedCarousel />
@@ -513,6 +541,17 @@ function App() {
       </main>
       <SiteFooter />
       <SideDrawer onClose={() => setMenuOpen(false)} open={menuOpen} returnFocusTo={menuButtonRef} />
+      <LocationSheet
+        locations={locations}
+        onClose={() => setLocationOpen(false)}
+        onConfirm={(next) => {
+          setLocation(next)
+          setLocationOpen(false)
+        }}
+        open={locationOpen}
+        returnFocusTo={locationButtonRef}
+        selected={location}
+      />
     </div>
   )
 }
