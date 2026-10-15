@@ -1,4 +1,5 @@
 import type { ReactNode } from "react"
+import { badgeLabel, type SiteEvent } from "./data"
 import { useFavorite } from "./favorites"
 import { ChevronForwardIcon, HeartIcon } from "./icons"
 
@@ -107,5 +108,80 @@ export function SectionHeader({
         </button>
       )}
     </header>
+  )
+}
+
+/* ---------- Event-card building blocks shared by every card type ---------- */
+
+/**
+ * Date pill on a card photo (top-left in RTL, no icon). Renders nothing when the event has no valid date.
+ * `inset` sets the distance from the photo edges (8px on cards, 16px on the large carousel card).
+ */
+export function DateBadge({ event, inset = "end-2 top-2" }: { event: SiteEvent; inset?: string }) {
+  const label = badgeLabel(event)
+  if (!label) return null
+  return (
+    <span
+      className={`pointer-events-none absolute z-[1] flex h-8 items-center rounded-control bg-surface/90 px-3 text-meta font-semibold whitespace-nowrap text-ink shadow-sm backdrop-blur-sm ${inset}`}
+    >
+      {label}
+    </span>
+  )
+}
+
+type RegistrationState = "open" | "closed" | "full" | "unavailable"
+
+/** The one place that decides how an event can be registered for. */
+export function registrationState(event: SiteEvent): RegistrationState {
+  if (event.registrationStatus) return event.registrationStatus
+  return event.registrationUrl ? "open" : "unavailable"
+}
+
+const registrationLabels: Record<RegistrationState, string> = {
+  open: "להרשמה",
+  closed: "ההרשמה סגורה",
+  full: "אזלו המקומות",
+  unavailable: "הרשמה בקרוב",
+}
+
+/**
+ * Registration action for a specific event.
+ * - open: terracotta link to the event's own registration URL (new tab)
+ * - closed / full / unavailable (no registration data yet): disabled, with the status as its label
+ * Sits above a card's stretched link (z-[1]), so tapping it never opens the card.
+ */
+export function RegisterButton({
+  event,
+  variant = "card",
+  className = "",
+}: {
+  event: SiteEvent
+  variant?: "card" | "overlay" | "bar"
+  className?: string
+}) {
+  const state = registrationState(event)
+  const label = registrationLabels[state]
+  const size =
+    variant === "bar" ? "h-12 w-46 text-body" : "h-10 px-4 text-meta"
+  const base = `relative z-[1] inline-flex shrink-0 items-center justify-center rounded-control font-semibold whitespace-nowrap ${size} ${className}`
+  if (state === "open") {
+    return (
+      <a
+        aria-label={`להרשמה: ${event.title}`}
+        className={`${base} bg-accent text-white active:bg-accent-pressed ${pressable}`}
+        href={event.registrationUrl}
+        onClick={(e) => e.stopPropagation()}
+        rel="noopener noreferrer"
+        target="_blank"
+      >
+        {label}
+      </a>
+    )
+  }
+  const muted = variant === "overlay" ? "bg-white/85 text-ink-muted" : "bg-sand text-ink-muted"
+  return (
+    <button aria-label={`${label}: ${event.title}`} className={`${base} cursor-not-allowed ${muted}`} disabled type="button">
+      {label}
+    </button>
   )
 }

@@ -5,7 +5,6 @@ import LocationSheet from "./LocationSheet"
 import SideDrawer from "./SideDrawer"
 import {
   byIds,
-  dateLabel,
   eventHref,
   events,
   featuredIds,
@@ -14,8 +13,8 @@ import {
   upcomingIds,
   type SiteEvent,
 } from "./data"
-import { BellIcon, CalendarIcon, ChevronDownIcon, ChevronForwardIcon, MapPinIcon, MenuIcon } from "./icons"
-import { FavoriteButton, MetaItem, PrimaryButton, SectionHeader, pressable } from "./ui"
+import { BellIcon, ChevronDownIcon, ChevronForwardIcon, MapPinIcon, MenuIcon } from "./icons"
+import { DateBadge, FavoriteButton, MetaItem, RegisterButton, SectionHeader, pressable } from "./ui"
 
 const featuredRetreats = byIds(featuredIds)
 const eventCards = byIds(upcomingIds)
@@ -167,15 +166,22 @@ function FeaturedSlide({
         src={image}
       />
       <div className="absolute inset-x-0 bottom-0 h-3/4 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
-      <FavoriteButton className="absolute end-4 top-4" id={id} />
+      <FavoriteButton className="absolute start-4 top-4" id={id} />
+      <DateBadge event={event} inset="end-4 top-4" />
 
       <h2 className="relative text-display font-bold">{title}</h2>
-      <div className="relative mt-2 flex items-end justify-between gap-4">
-        <div className="flex flex-col gap-1 text-meta text-white/90">
-          <MetaItem icon={<CalendarIcon size={16} />}>{dateLabel(event)}</MetaItem>
-          <MetaItem icon={<MapPinIcon size={16} />}>{location}</MetaItem>
-        </div>
-        <PrimaryButton href={eventHref(id)}>לפרטים</PrimaryButton>
+      <div className="relative mt-1 text-meta text-white/90">
+        <MetaItem icon={<MapPinIcon size={16} />}>{location}</MetaItem>
+      </div>
+      <div className="relative mt-4 flex items-center gap-2">
+        <RegisterButton event={event} variant="overlay" />
+        <a
+          className={`inline-flex h-10 shrink-0 items-center gap-1 rounded-control border border-white/50 bg-white/15 ps-4 pe-3 text-meta font-semibold text-white backdrop-blur-sm active:bg-white/25 ${pressable}`}
+          href={eventHref(id)}
+        >
+          לפרטים
+          <ChevronForwardIcon size={16} />
+        </a>
       </div>
     </article>
   )
@@ -278,7 +284,8 @@ function EventCard({ event }: { event: SiteEvent }) {
       <div className="relative aspect-[3/2] overflow-hidden bg-sand">
         <img alt="" className="size-full object-cover" src={image} />
       </div>
-      <FavoriteButton className="absolute end-2 top-2 z-[1]" id={id} />
+      <FavoriteButton className="absolute start-2 top-2 z-[1]" id={id} />
+      <DateBadge event={event} />
       <div className="flex flex-1 flex-col p-4">
         <h3 className="text-title font-bold text-ink">
           {/* The ::after overlay makes the whole card the tap target for this link. */}
@@ -288,8 +295,8 @@ function EventCard({ event }: { event: SiteEvent }) {
         </h3>
         <p className="mt-1 text-meta text-ink-muted">{location}</p>
         <div className="mt-auto pt-4">
-          <div className="border-t border-line pt-4 text-meta text-ink-muted">
-            <MetaItem icon={<CalendarIcon size={16} />}>{dateLabel(event)}</MetaItem>
+          <div className="border-t border-line pt-4">
+            <RegisterButton className="w-full" event={event} />
           </div>
         </div>
       </div>
@@ -319,20 +326,25 @@ function UpcomingEvents() {
 function RetreatCard({ event }: { event: SiteEvent }) {
   const { id, image, location, subtitle, title } = event
   return (
-    <article className="flex w-[82vw] max-w-[340px] shrink-0 overflow-hidden rounded-card border border-line/60 bg-surface shadow-card">
+    <article className="relative flex w-[82vw] max-w-[340px] shrink-0 overflow-hidden rounded-card border border-line/60 bg-surface shadow-card">
       <div className="flex min-w-0 flex-1 flex-col p-4">
-        <h3 className="text-title font-bold text-ink">{title}</h3>
+        <h3 className="text-title font-bold text-ink">
+          {/* The ::after overlay makes the whole card the tap target for this link. */}
+          <a className="after:absolute after:inset-0 after:content-['']" href={eventHref(id)}>
+            {title}
+          </a>
+        </h3>
         {subtitle && <p className="mt-1 text-meta text-ink-muted">{subtitle}</p>}
-        <div className="mt-4 flex flex-col gap-2 text-meta text-ink-muted">
+        <div className="mt-4 text-meta text-ink-muted">
           <MetaItem icon={<MapPinIcon size={16} />}>{location}</MetaItem>
-          <MetaItem icon={<CalendarIcon size={16} />}>{dateLabel(event)}</MetaItem>
         </div>
         <div className="mt-auto pt-4">
-          <PrimaryButton href={eventHref(id)}>לפרטים</PrimaryButton>
+          <RegisterButton event={event} />
         </div>
       </div>
-      <div className="w-[42%] shrink-0 bg-sand">
+      <div className="relative w-[42%] shrink-0 bg-sand">
         <img alt="" className="size-full object-cover" draggable={false} src={image} />
+        <DateBadge event={event} />
       </div>
     </article>
   )

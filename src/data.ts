@@ -1,5 +1,7 @@
 /* Single source of truth for events shown across the site. Every event has a stable id used in its URL. */
 
+import { formatEventDates, type EventDates } from "./dates"
+
 const asset = (file: string) => `${import.meta.env.BASE_URL}assets/${file}`
 
 export const images = {
@@ -23,14 +25,18 @@ export type SiteEvent = {
   location: string
   /** Area used for grouping ("more in …"); matches the header location picker. */
   area: string
-  date: string
+  /** Calendar dates; no year is stored for the current events, so weekdays are not shown. */
+  dates?: EventDates
   time?: string
   image: string
   /* The fields below have no data yet; the event page shows each section only when it is provided. */
   priceRange?: string
   about?: string
   host?: Host
+  /** External registration page for this event. */
   registrationUrl?: string
+  /** Set when registration exists but is not available. */
+  registrationStatus?: "closed" | "full"
 }
 
 export const events: Record<string, SiteEvent> = {
@@ -40,7 +46,7 @@ export const events: Record<string, SiteEvent> = {
     subtitle: "ריטריט סופשבוע בחוף גורדון, תל אביב",
     location: "חוף גורדון, תל אביב",
     area: "תל אביב",
-    date: "17-17 באפריל",
+    dates: { month: 4, from: 17 }, // was "17-17 באפריל"
     image: asset("f1bd4.png"),
   },
   "yoga-among-olives": {
@@ -48,7 +54,7 @@ export const events: Record<string, SiteEvent> = {
     title: "יוגה בין הזיתים",
     location: "כפר ורדים, גליל מערבי",
     area: "גליל מערבי",
-    date: "8-10 במאי",
+    dates: { month: 5, from: 8, to: 10 },
     image: asset("retreat-galilee.jpg"),
   },
   "crater-sunrise": {
@@ -56,7 +62,7 @@ export const events: Record<string, SiteEvent> = {
     title: "זריחה במכתש",
     location: "מצפה רמון",
     area: "מצפה רמון",
-    date: "22-24 במאי",
+    dates: { month: 5, from: 22, to: 24 },
     image: asset("retreat-ramon.jpg"),
   },
   "sound-meditation": {
@@ -64,7 +70,7 @@ export const events: Record<string, SiteEvent> = {
     title: "מדיטציית צלילים",
     location: "מרכז אננדה, תל אביב",
     area: "תל אביב",
-    date: "19 באפריל",
+    dates: { month: 4, from: 19 },
     time: "19:30",
     image: asset("bcf2e.png"),
   },
@@ -74,7 +80,7 @@ export const events: Record<string, SiteEvent> = {
     subtitle: "ריטריט מדיטציית ויפאסנה",
     location: "מדבר יהודה",
     area: "מדבר יהודה",
-    date: "2-4 בנובמבר",
+    dates: { month: 11, from: 2, to: 4 },
     image: asset("2a252.png"),
   },
   "galilee-yoga-retreat": {
@@ -83,7 +89,7 @@ export const events: Record<string, SiteEvent> = {
     subtitle: "ריטריט יוגה בנוף הגליל",
     location: "גליל עליון",
     area: "גליל עליון",
-    date: "16-16 בנובמבר",
+    dates: { month: 11, from: 16 }, // was "16-16 בנובמבר"
     image: asset("45898.png"),
   },
   "nature-connection": {
@@ -92,7 +98,7 @@ export const events: Record<string, SiteEvent> = {
     subtitle: "ריטריט יוגה וסדנאות בטבע",
     location: "גליל עליון",
     area: "גליל עליון",
-    date: "25-23 במאי",
+    dates: { month: 5, from: 23, to: 25 }, // was "25-23 במאי"
     image: asset("54a2d.png"),
   },
 }
@@ -106,8 +112,12 @@ export const byIds = (ids: string[]) => ids.map((id) => events[id])
 
 export const eventHref = (id: string) => `#/event/${id}`
 
-/** "19 באפריל • 19:30" style label used on cards. */
-export const dateLabel = (e: SiteEvent) => (e.time ? `${e.date} • ${e.time}` : e.date)
+/** Compact badge text, e.g. "19 באפר׳ · 19:30"; null when the event has no valid date. */
+export function badgeLabel(e: SiteEvent): string | null {
+  const date = formatEventDates(e.dates, "short")
+  if (!date) return null
+  return e.time ? `${date} · ${e.time}` : date
+}
 
 /** Splits "<venue>, <area>" into its parts; a bare area has no venue line. */
 export function splitLocation(location: string): { primary: string; secondary?: string } {

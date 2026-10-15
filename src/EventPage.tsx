@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState, type ReactNode } from "react"
-import { dateLabel, eventHref, relatedEvents, splitLocation, type SiteEvent } from "./data"
+import { badgeLabel, eventHref, relatedEvents, splitLocation, type SiteEvent } from "./data"
+import { formatEventDates } from "./dates"
 import { CalendarIcon, ChevronBackIcon, ChevronForwardIcon, MapPinIcon, ShareIcon, TagIcon } from "./icons"
-import { FavoriteButton, SectionHeader, pressable } from "./ui"
+import { DateBadge, FavoriteButton, RegisterButton, SectionHeader, pressable } from "./ui"
 
 /* Composition follows the approved reference (390px): 183px of photo above a sheet with 24px rounded corners,
    ~58px detail rows with 40px icon circles, a small-card rail, and a fixed registration bar. The reference is laid
@@ -24,20 +25,23 @@ function DetailRow({ icon, primary, secondary, action }: { icon: ReactNode; prim
 
 function RelatedCard({ event, showArea }: { event: SiteEvent; showArea: boolean }) {
   return (
-    <article className="relative w-40 shrink-0 snap-start overflow-hidden rounded-card border border-line/60 bg-surface shadow-card">
-      <div className="aspect-[3/2] bg-sand">
+    <article className="relative flex w-40 shrink-0 snap-start flex-col overflow-hidden rounded-card border border-line/60 bg-surface shadow-card">
+      <div className="relative aspect-[3/2] bg-sand">
         <img alt="" className="size-full object-cover" draggable={false} src={event.image} />
+        <DateBadge event={event} />
       </div>
-      <FavoriteButton className="absolute end-2 top-2 z-[1]" id={event.id} tone="compact" />
-      <div className="px-3 pt-2 pb-3">
+      <FavoriteButton className="absolute start-2 top-2 z-[1]" id={event.id} tone="compact" />
+      <div className="flex flex-1 flex-col px-3 pt-2 pb-3">
         <h3 className="truncate text-body font-bold text-ink">
           <a className="after:absolute after:inset-0 after:content-['']" href={eventHref(event.id)}>
             {event.title}
           </a>
         </h3>
-        {/* Inside "עוד ב<area>" the area is implied; in the mixed list it gets its own line so nothing truncates. */}
+        {/* Inside "עוד ב<area>" the area is implied; the date is on the photo. */}
         {showArea && <p className="truncate text-meta text-ink-muted">{event.area}</p>}
-        <p className="truncate text-meta text-ink-muted">{dateLabel(event)}</p>
+        <div className="mt-auto pt-2">
+          <RegisterButton className="w-full" event={event} />
+        </div>
       </div>
     </article>
   )
@@ -66,6 +70,8 @@ export default function EventPage({ event, onBack }: { event: SiteEvent; onBack:
   const [toast, setToast] = useState<string | null>(null)
   const toastTimer = useRef<number | undefined>(undefined)
   const location = splitLocation(event.location)
+  const longDate = formatEventDates(event.dates, "long")
+  const shortDate = badgeLabel(event)
   const related = relatedEvents(event)
   const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(event.location)}`
 
@@ -121,7 +127,7 @@ export default function EventPage({ event, onBack }: { event: SiteEvent; onBack:
         {event.subtitle && <p className="mt-1 text-center text-body text-ink-muted">{event.subtitle}</p>}
 
         <ul className="mt-4 divide-y divide-ink/10">
-          <DetailRow icon={<CalendarIcon />} primary={event.date} secondary={event.time} />
+          {longDate && <DetailRow icon={<CalendarIcon />} primary={longDate} secondary={event.time} />}
           <DetailRow
             action={
               <a
@@ -184,29 +190,15 @@ export default function EventPage({ event, onBack }: { event: SiteEvent; onBack:
               <p className="text-meta text-ink-muted">מחיר למשתתף</p>
               <p className="text-heading font-bold text-ink">{event.priceRange}</p>
             </div>
+          ) : shortDate ? (
+            <div className="min-w-0">
+              <p className="text-meta text-ink-muted">מועד</p>
+              <p className="text-title font-bold text-ink">{shortDate}</p>
+            </div>
           ) : (
-            <p className="min-w-0 text-meta text-ink-muted">ההרשמה תיפתח בקרוב</p>
+            <span />
           )}
-          {event.registrationUrl ? (
-            <a
-              className={`flex h-12 w-46 shrink-0 items-center justify-center rounded-control bg-accent text-body font-semibold text-white active:bg-accent-pressed ${pressable}`}
-              href={event.registrationUrl}
-              rel="noopener noreferrer"
-              target="_blank"
-            >
-              להרשמה
-            </a>
-          ) : (
-            /* No registration flow exists yet: shown, but clearly unavailable. */
-            <button
-              aria-disabled="true"
-              className="flex h-12 w-46 shrink-0 cursor-not-allowed items-center justify-center rounded-control bg-accent/40 text-body font-semibold text-white"
-              disabled
-              type="button"
-            >
-              להרשמה
-            </button>
-          )}
+          <RegisterButton event={event} variant="bar" />
         </div>
       </div>
     </div>
