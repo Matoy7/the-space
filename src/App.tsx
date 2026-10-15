@@ -84,28 +84,20 @@ const eventCards = [
 
 const pressable = "transition-[background-color,transform] duration-150 active:scale-[0.97]"
 
-function IconButton({
-  children,
-  label,
-  tone = "sand",
-  className = "",
-}: {
-  children: ReactNode
-  label: string
-  tone?: "sand" | "overlay"
-  className?: string
-}) {
-  const tones = {
-    sand: "bg-sand text-ink active:bg-line",
-    overlay: "bg-black/30 text-white backdrop-blur-sm active:bg-black/45",
-  }
+/** Heart toggle on photos: outline on a dark glass chip; when saved, a terracotta heart on a light chip. */
+function FavoriteButton({ className = "", size = 20 }: { className?: string; size?: number }) {
+  const [saved, setSaved] = useState(false)
   return (
     <button
-      aria-label={label}
-      className={`flex size-10 items-center justify-center rounded-control ${tones[tone]} ${pressable} ${className}`}
+      aria-label="שמור למועדפים"
+      aria-pressed={saved}
+      className={`flex size-10 items-center justify-center rounded-control backdrop-blur-sm transition-[background-color,color,transform] duration-200 active:scale-90 ${
+        saved ? "bg-white/90 text-accent" : "bg-black/30 text-white active:bg-black/45"
+      } ${className}`}
+      onClick={() => setSaved((v) => !v)}
       type="button"
     >
-      {children}
+      <HeartIcon fill={saved ? "currentColor" : "none"} size={size} />
     </button>
   )
 }
@@ -243,9 +235,7 @@ function FeaturedSlide({
         src={image}
       />
       <div className="absolute inset-x-0 bottom-0 h-3/4 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
-      <IconButton className="absolute end-4 top-4" label="שמור למועדפים" tone="overlay">
-        <HeartIcon />
-      </IconButton>
+      <FavoriteButton className="absolute end-4 top-4" />
 
       <h2 className="relative text-display font-bold">{title}</h2>
       <div className="relative mt-2 flex items-end justify-between gap-4">
@@ -360,9 +350,7 @@ function EventCard({ date, image, location, title }: (typeof eventCards)[number]
     <article className="flex w-60 shrink-0 snap-start flex-col overflow-hidden rounded-card border border-line/60 bg-surface shadow-card">
       <div className="relative aspect-[3/2] overflow-hidden bg-sand">
         <img alt="" className="size-full object-cover" src={image} />
-        <IconButton className="absolute end-2 top-2" label="הוסף למועדפים" tone="overlay">
-          <HeartIcon size={18} />
-        </IconButton>
+        <FavoriteButton className="absolute end-2 top-2" size={18} />
       </div>
       <div className="flex flex-1 flex-col p-4">
         <h3 className="text-title font-bold text-ink">{title}</h3>
