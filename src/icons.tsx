@@ -62,3 +62,20 @@ export const BellIcon = createIcon(
 )
 
 export const CloseIcon = createIcon(<path d="M6 6l12 12M18 6 6 18" />)
+
+/** "Back" in an RTL interface points right. */
+export const ChevronBackIcon = createIcon(<path d="m10 7 5 5-5 5" />)
+
+export const ShareIcon = createIcon(
+  <>
+    <path d="M12 15V3.5M7.5 8 12 3.5 16.5 8" />
+    <path d="M8 11H6.5A1.5 1.5 0 0 0 5 12.5v7A1.5 1.5 0 0 0 6.5 21h11a1.5 1.5 0 0 0 1.5-1.5v-7a1.5 1.5 0 0 0-1.5-1.5H16" />
+  </>,
+)
+
+export const TagIcon = createIcon(
+  <>
+    <path d="M3.5 12.6V4.5a1 1 0 0 1 1-1h8.1a1 1 0 0 1 .7.3l7.4 7.4a1 1 0 0 1 0 1.4l-8.1 8.1a1 1 0 0 1-1.4 0l-7.4-7.4a1 1 0 0 1-.3-.7Z" />
+    <circle cx="8.5" cy="8.5" r="1.5" />
+  </>,
+)

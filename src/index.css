@@ -35,6 +35,9 @@
   --text-display: 28px;
   --text-display--line-height: 36px;
   --text-display--letter-spacing: -0.4px;
+  --text-headline: 32px;
+  --text-headline--line-height: 40px;
+  --text-headline--letter-spacing: -0.5px;
 
   /* Radius scale */
   --radius-control: 9999px;

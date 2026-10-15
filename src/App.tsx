@@ -1,52 +1,25 @@
-import { useEffect, useRef, useState, type ReactNode, type RefObject } from "react"
+import { useEffect, useLayoutEffect, useRef, useState, type RefObject } from "react"
+import EventPage from "./EventPage"
+import FavoritesProvider from "./favorites"
 import LocationSheet from "./LocationSheet"
 import SideDrawer from "./SideDrawer"
 import {
-  BellIcon,
-  CalendarIcon,
-  ChevronDownIcon,
-  ChevronForwardIcon,
-  HeartIcon,
-  MapPinIcon,
-  MenuIcon,
-} from "./icons"
+  byIds,
+  dateLabel,
+  eventHref,
+  events,
+  featuredIds,
+  images,
+  selectedRetreatIds,
+  upcomingIds,
+  type SiteEvent,
+} from "./data"
+import { BellIcon, CalendarIcon, ChevronDownIcon, ChevronForwardIcon, MapPinIcon, MenuIcon } from "./icons"
+import { FavoriteButton, MetaItem, PrimaryButton, SectionHeader, pressable } from "./ui"
 
-const assetPathPrefix = `${import.meta.env.BASE_URL}assets`
-const imgLogo = `${assetPathPrefix}/77585.png`
-const imgWellness = `${assetPathPrefix}/2af54.png`
-const imgCommunity = `${assetPathPrefix}/089e8.png`
-const imgRetreats = `${assetPathPrefix}/71e6d.png`
-const imgWorkshops = `${assetPathPrefix}/19244.png`
-const imgMeditation = `${assetPathPrefix}/80ed4.png`
-const imgYoga = `${assetPathPrefix}/6d380.png`
-const imgHero = `${assetPathPrefix}/f1bd4.png`
-const imgGalilee = `${assetPathPrefix}/45898.png`
-const imgDesert = `${assetPathPrefix}/2a252.png`
-const imgSoundBath = `${assetPathPrefix}/bcf2e.png`
-const imgNature = `${assetPathPrefix}/54a2d.png`
-const imgRetreatGalilee = `${assetPathPrefix}/retreat-galilee.jpg`
-const imgRetreatRamon = `${assetPathPrefix}/retreat-ramon.jpg`
-
-const featuredRetreats = [
-  {
-    title: "יוגה מול הים",
-    date: "17-17 באפריל",
-    location: "חוף גורדון, תל אביב",
-    image: imgHero,
-  },
-  {
-    title: "יוגה בין הזיתים",
-    date: "8-10 במאי",
-    location: "כפר ורדים, גליל מערבי",
-    image: imgRetreatGalilee,
-  },
-  {
-    title: "זריחה במכתש",
-    date: "22-24 במאי",
-    location: "מצפה רמון",
-    image: imgRetreatRamon,
-  },
-]
+const featuredRetreats = byIds(featuredIds)
+const eventCards = byIds(upcomingIds)
+const selectedRetreats = byIds(selectedRetreatIds)
 
 const AUTOPLAY_MS = 2500
 const SWIPE_THRESHOLD_PX = 40
@@ -56,92 +29,13 @@ const locations = ["גליל עליון", "גליל מערבי", "תל אביב"
 
 /* Listed in reading order (right → left in RTL). */
 const categories = [
-  { name: "יוגה", image: imgYoga, active: true },
-  { name: "מדיטציה", image: imgMeditation },
-  { name: "סדנאות", image: imgWorkshops },
-  { name: "ריטריטים", image: imgRetreats },
-  { name: "קהילה", image: imgCommunity },
-  { name: "וולנס", image: imgWellness },
+  { name: "יוגה", image: images.yoga, active: true },
+  { name: "מדיטציה", image: images.meditation },
+  { name: "סדנאות", image: images.workshops },
+  { name: "ריטריטים", image: images.retreats },
+  { name: "קהילה", image: images.community },
+  { name: "וולנס", image: images.wellness },
 ]
-
-const eventCards = [
-  {
-    title: "מדיטציית צלילים",
-    location: "מרכז אננדה, תל אביב",
-    date: "19 באפריל • 19:30",
-    image: imgSoundBath,
-  },
-  {
-    title: "ויפאסנה במדבר",
-    location: "מדבר יהודה",
-    date: "2-4 בנובמבר",
-    image: imgDesert,
-  },
-  {
-    title: "ריטריט יוגה בגליל",
-    location: "גליל עליון",
-    date: "16-16 בנובמבר",
-    image: imgGalilee,
-  },
-]
-
-/* ---------- Shared primitives ---------- */
-
-const pressable = "transition-[background-color,transform] duration-150 active:scale-[0.97]"
-
-/** Heart toggle on photos: outline on a dark glass chip; when saved, a terracotta heart on a light chip. */
-function FavoriteButton({ className = "", size = 20 }: { className?: string; size?: number }) {
-  const [saved, setSaved] = useState(false)
-  return (
-    <button
-      aria-label="שמור למועדפים"
-      aria-pressed={saved}
-      className={`flex size-10 items-center justify-center rounded-control backdrop-blur-sm transition-[background-color,color,transform] duration-200 active:scale-90 ${
-        saved ? "bg-white/90 text-accent" : "bg-black/30 text-white active:bg-black/45"
-      } ${className}`}
-      onClick={() => setSaved((v) => !v)}
-      type="button"
-    >
-      <HeartIcon fill={saved ? "currentColor" : "none"} size={size} />
-    </button>
-  )
-}
-
-function PrimaryButton({ children }: { children: ReactNode }) {
-  return (
-    <button
-      className={`inline-flex h-10 shrink-0 items-center gap-1 rounded-control bg-accent ps-4 pe-3 text-meta font-semibold text-white active:bg-accent-pressed ${pressable}`}
-      type="button"
-    >
-      {children}
-      <ChevronForwardIcon size={16} />
-    </button>
-  )
-}
-
-function MetaItem({ icon, children }: { icon: ReactNode; children: ReactNode }) {
-  return (
-    <span className="flex items-center gap-2">
-      {icon}
-      <span>{children}</span>
-    </span>
-  )
-}
-
-function SectionHeader({ title }: { title: string }) {
-  return (
-    <header className="flex items-center justify-between px-4">
-      <h2 className="text-heading font-bold text-ink">{title}</h2>
-      <button
-        className="-me-2 inline-flex h-10 items-center gap-1 rounded-control px-2 text-meta font-semibold text-accent transition-colors active:bg-sand"
-        type="button"
-      >
-        הצג הכל
-        <ChevronForwardIcon size={16} />
-      </button>
-    </header>
-  )
-}
 
 /* ---------- Sections ---------- */
 
@@ -245,13 +139,16 @@ function CategoryStrip() {
 
 function FeaturedSlide({
   active,
-  date,
-  image,
+  event,
   index,
-  location,
-  title,
   total,
-}: (typeof featuredRetreats)[number] & { active: boolean; index: number; total: number }) {
+}: {
+  active: boolean
+  event: SiteEvent
+  index: number
+  total: number
+}) {
+  const { id, image, location, title } = event
   return (
     <article
       aria-hidden={!active}
@@ -270,15 +167,15 @@ function FeaturedSlide({
         src={image}
       />
       <div className="absolute inset-x-0 bottom-0 h-3/4 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
-      <FavoriteButton className="absolute end-4 top-4" />
+      <FavoriteButton className="absolute end-4 top-4" id={id} />
 
       <h2 className="relative text-display font-bold">{title}</h2>
       <div className="relative mt-2 flex items-end justify-between gap-4">
         <div className="flex flex-col gap-1 text-meta text-white/90">
-          <MetaItem icon={<CalendarIcon size={16} />}>{date}</MetaItem>
+          <MetaItem icon={<CalendarIcon size={16} />}>{dateLabel(event)}</MetaItem>
           <MetaItem icon={<MapPinIcon size={16} />}>{location}</MetaItem>
         </div>
-        <PrimaryButton>לפרטים</PrimaryButton>
+        <PrimaryButton href={eventHref(id)}>לפרטים</PrimaryButton>
       </div>
     </article>
   )
@@ -348,13 +245,7 @@ function FeaturedCarousel() {
         onPointerUp={(e) => endInteraction(e.clientX)}
       >
         {featuredRetreats.map((slide, index) => (
-          <FeaturedSlide
-            {...slide}
-            active={index === active}
-            index={index}
-            key={slide.title}
-            total={total}
-          />
+          <FeaturedSlide active={index === active} event={slide} index={index} key={slide.id} total={total} />
         ))}
       </div>
 
@@ -364,7 +255,7 @@ function FeaturedCarousel() {
             aria-current={index === active ? "true" : undefined}
             aria-label={`מעבר לשקופית ${index + 1}: ${slide.title}`}
             className="group flex h-10 items-center px-2"
-            key={slide.title}
+            key={slide.id}
             onClick={() => goTo(index)}
             type="button"
           >
@@ -380,19 +271,25 @@ function FeaturedCarousel() {
   )
 }
 
-function EventCard({ date, image, location, title }: (typeof eventCards)[number]) {
+function EventCard({ event }: { event: SiteEvent }) {
+  const { id, image, location, title } = event
   return (
-    <article className="flex w-60 shrink-0 snap-start flex-col overflow-hidden rounded-card border border-line/60 bg-surface shadow-card">
+    <article className="relative flex w-60 shrink-0 snap-start flex-col overflow-hidden rounded-card border border-line/60 bg-surface shadow-card">
       <div className="relative aspect-[3/2] overflow-hidden bg-sand">
         <img alt="" className="size-full object-cover" src={image} />
-        <FavoriteButton className="absolute end-2 top-2" size={18} />
       </div>
+      <FavoriteButton className="absolute end-2 top-2 z-[1]" id={id} />
       <div className="flex flex-1 flex-col p-4">
-        <h3 className="text-title font-bold text-ink">{title}</h3>
+        <h3 className="text-title font-bold text-ink">
+          {/* The ::after overlay makes the whole card the tap target for this link. */}
+          <a className="after:absolute after:inset-0 after:content-['']" href={eventHref(id)}>
+            {title}
+          </a>
+        </h3>
         <p className="mt-1 text-meta text-ink-muted">{location}</p>
         <div className="mt-auto pt-4">
           <div className="border-t border-line pt-4 text-meta text-ink-muted">
-            <MetaItem icon={<CalendarIcon size={16} />}>{date}</MetaItem>
+            <MetaItem icon={<CalendarIcon size={16} />}>{dateLabel(event)}</MetaItem>
           </div>
         </div>
       </div>
@@ -411,51 +308,27 @@ function UpcomingEvents() {
     <section className={`flex flex-col gap-4 ${anchorOffset}`} id="events">
       <SectionHeader title="אירועים קרובים" />
       <div className={cardRail}>
-        {eventCards.map((card) => (
-          <EventCard {...card} key={card.title} />
+        {eventCards.map((event) => (
+          <EventCard event={event} key={event.id} />
         ))}
       </div>
     </section>
   )
 }
 
-/* Card order is preserved: the original card first, then retreats already listed in the app's events. */
-const selectedRetreats = [
-  {
-    title: "חיבור לטבע",
-    description: "ריטריט יוגה וסדנאות בטבע",
-    location: "גליל עליון",
-    date: "25-23 במאי",
-    image: imgNature,
-  },
-  {
-    title: "ריטריט יוגה בגליל",
-    description: "ריטריט יוגה בנוף הגליל",
-    location: "גליל עליון",
-    date: "16-16 בנובמבר",
-    image: imgGalilee,
-  },
-  {
-    title: "ויפאסנה במדבר",
-    description: "ריטריט מדיטציית ויפאסנה",
-    location: "מדבר יהודה",
-    date: "2-4 בנובמבר",
-    image: imgDesert,
-  },
-]
-
-function RetreatCard({ date, description, image, location, title }: (typeof selectedRetreats)[number]) {
+function RetreatCard({ event }: { event: SiteEvent }) {
+  const { id, image, location, subtitle, title } = event
   return (
     <article className="flex w-[82vw] max-w-[340px] shrink-0 overflow-hidden rounded-card border border-line/60 bg-surface shadow-card">
       <div className="flex min-w-0 flex-1 flex-col p-4">
         <h3 className="text-title font-bold text-ink">{title}</h3>
-        <p className="mt-1 text-meta text-ink-muted">{description}</p>
+        {subtitle && <p className="mt-1 text-meta text-ink-muted">{subtitle}</p>}
         <div className="mt-4 flex flex-col gap-2 text-meta text-ink-muted">
           <MetaItem icon={<MapPinIcon size={16} />}>{location}</MetaItem>
-          <MetaItem icon={<CalendarIcon size={16} />}>{date}</MetaItem>
+          <MetaItem icon={<CalendarIcon size={16} />}>{dateLabel(event)}</MetaItem>
         </div>
         <div className="mt-auto pt-4">
-          <PrimaryButton>לפרטים</PrimaryButton>
+          <PrimaryButton href={eventHref(id)}>לפרטים</PrimaryButton>
         </div>
       </div>
       <div className="w-[42%] shrink-0 bg-sand">
@@ -470,9 +343,9 @@ function FeaturedRetreats() {
     <section className={`flex flex-col gap-4 ${anchorOffset}`} id="retreats">
       <SectionHeader title="ריטריטים נבחרים" />
       <div aria-label="ריטריטים נבחרים" className={cardRail} role="list">
-        {selectedRetreats.map((retreat) => (
-          <div className="flex shrink-0 snap-start" key={retreat.title} role="listitem">
-            <RetreatCard {...retreat} />
+        {selectedRetreats.map((event) => (
+          <div className="flex shrink-0 snap-start" key={event.id} role="listitem">
+            <RetreatCard event={event} />
           </div>
         ))}
       </div>
@@ -490,7 +363,7 @@ function SiteFooter() {
   const year = new Date().getFullYear()
   return (
     <footer className="rounded-t-feature bg-sand px-4 pt-8 pb-[calc(env(safe-area-inset-bottom)+24px)]">
-      <img alt="המרחב" className="h-10 w-auto" height={40} src={imgLogo} width={121} />
+      <img alt="המרחב" className="h-10 w-auto" height={40} src={images.logo} width={121} />
       <p className="mt-4 max-w-[34ch] text-meta text-ink-muted">
         אירועי וולנס, סדנאות וריטריטים מכל הארץ, מרוכזים במקום אחד — כדי שיהיה קל למצוא את מה שמתאים לכם.
       </p>
@@ -516,10 +389,67 @@ function SiteFooter() {
   )
 }
 
-function App() {
+/* Hash routes keep deep links working on GitHub Pages: "#/event/<id>" is an event page; any other hash is the home page. */
+type Route = { name: "home" } | { name: "event"; id: string }
+
+function parseRoute(hash: string): Route {
+  const match = hash.match(/^#\/event\/([\w-]+)$/)
+  return match && events[match[1]] ? { name: "event", id: match[1] } : { name: "home" }
+}
+
+function useRoute() {
+  const [route, setRoute] = useState<Route>(() => parseRoute(window.location.hash))
+  const routeRef = useRef(route)
+  const homeScrollY = useRef(0)
+  // True when the current event page was opened from the home page in this session, so "back" can use history.
+  const openedFromHome = useRef(false)
+
+  useEffect(() => {
+    if ("scrollRestoration" in history) history.scrollRestoration = "manual"
+    const onHashChange = () => {
+      const next = parseRoute(window.location.hash)
+      const prev = routeRef.current
+      if (prev.name === "home" && next.name === "event") {
+        homeScrollY.current = window.scrollY
+        openedFromHome.current = true
+      }
+      routeRef.current = next
+      setRoute(next)
+    }
+    window.addEventListener("hashchange", onHashChange)
+    return () => window.removeEventListener("hashchange", onHashChange)
+  }, [])
+
+  // Event pages open at the top; returning home restores the previous position (or jumps to a section anchor).
+  useLayoutEffect(() => {
+    if (route.name === "event") {
+      window.scrollTo({ top: 0, behavior: "instant" })
+      return
+    }
+    const anchor = window.location.hash.slice(1)
+    const target = anchor ? document.getElementById(anchor) : null
+    if (target) target.scrollIntoView({ block: "start", behavior: "instant" })
+    else window.scrollTo({ top: homeScrollY.current, behavior: "instant" })
+  }, [route])
+
+  const goHome = () => {
+    if (openedFromHome.current) {
+      openedFromHome.current = false
+      history.back()
+      return
+    }
+    history.replaceState(null, "", window.location.pathname + window.location.search)
+    routeRef.current = { name: "home" }
+    homeScrollY.current = 0
+    setRoute({ name: "home" })
+  }
+
+  return { route, goHome }
+}
+
+function HomePage({ location, setLocation }: { location: string; setLocation: (next: string) => void }) {
   const [menuOpen, setMenuOpen] = useState(false)
   const menuButtonRef = useRef<HTMLButtonElement>(null)
-  const [location, setLocation] = useState<string>("תל אביב")
   const [locationOpen, setLocationOpen] = useState(false)
   const locationButtonRef = useRef<HTMLButtonElement>(null)
   return (
@@ -553,6 +483,21 @@ function App() {
         selected={location}
       />
     </div>
+  )
+}
+
+function App() {
+  const { route, goHome } = useRoute()
+  // Lives above the router so the chosen area survives a visit to an event page.
+  const [location, setLocation] = useState<string>("תל אביב")
+  return (
+    <FavoritesProvider>
+      {route.name === "event" ? (
+        <EventPage event={events[route.id]} key={route.id} onBack={goHome} />
+      ) : (
+        <HomePage location={location} setLocation={setLocation} />
+      )}
+    </FavoritesProvider>
   )
 }
 
