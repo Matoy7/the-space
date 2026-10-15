@@ -1,0 +1,12 @@
+{
+  "title": "המרחב",
+  "language": "he",
+  "description": "Transforms Figma frames into pixel-perfect, production-ready web implementations preserving exact design details and right-to-left Hebrew typography.",
+  "robots": {
+    "index": false
+  },
+  "accessibility": {
+    "addBypassLinks": false,
+    "ignoreReducedMotion": false
+  }
+}
