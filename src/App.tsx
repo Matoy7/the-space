@@ -1,317 +1,294 @@
-const assetPathPrefix = `${import.meta.env.BASE_URL}assets`
-const imgImage1 = `${assetPathPrefix}/77585.png`
-const img = `${assetPathPrefix}/2af54.png`
-const img1 = `${assetPathPrefix}/089e8.png`
-const img2 = `${assetPathPrefix}/71e6d.png`
-const img3 = `${assetPathPrefix}/19244.png`
-const img4 = `${assetPathPrefix}/80ed4.png`
-const img5 = `${assetPathPrefix}/6d380.png`
-const imgBackgroundShadow = `${assetPathPrefix}/f1bd4.png`
-const img6 = `${assetPathPrefix}/45898.png`
-const img7 = `${assetPathPrefix}/2a252.png`
-const img8 = `${assetPathPrefix}/bcf2e.png`
-const img9 = `${assetPathPrefix}/54a2d.png`
-const imgSvg = `${assetPathPrefix}/0b1a6.svg`
-const imgSvg1 = `${assetPathPrefix}/e5005.svg`
-const imgSvg2 = `${assetPathPrefix}/f0f9e.svg`
-const imgSvg3 = `${assetPathPrefix}/19723.svg`
-const imgSvg4 = `${assetPathPrefix}/d441d.svg`
-const imgSvg5 = `${assetPathPrefix}/122c4.svg`
-const imgSvg6 = `${assetPathPrefix}/2cfd2.svg`
-const imgSvg7 = `${assetPathPrefix}/46c7a.svg`
-const imgSvg8 = `${assetPathPrefix}/e2081.svg`
-const imgSvg9 = `${assetPathPrefix}/67871.svg`
-const imgSvg10 = `${assetPathPrefix}/2f15d.svg`
-const imgSvg11 = `${assetPathPrefix}/fa840.svg`
-const imgSvg12 = `${assetPathPrefix}/7fa7c.svg`
+import type { ReactNode } from "react"
+import {
+  CalendarIcon,
+  ChevronDownIcon,
+  ChevronForwardIcon,
+  HeartIcon,
+  MapPinIcon,
+  MenuIcon,
+} from "./icons"
 
+const assetPathPrefix = `${import.meta.env.BASE_URL}assets`
+const imgLogo = `${assetPathPrefix}/77585.png`
+const imgWellness = `${assetPathPrefix}/2af54.png`
+const imgCommunity = `${assetPathPrefix}/089e8.png`
+const imgRetreats = `${assetPathPrefix}/71e6d.png`
+const imgWorkshops = `${assetPathPrefix}/19244.png`
+const imgMeditation = `${assetPathPrefix}/80ed4.png`
+const imgYoga = `${assetPathPrefix}/6d380.png`
+const imgHero = `${assetPathPrefix}/f1bd4.png`
+const imgGalilee = `${assetPathPrefix}/45898.png`
+const imgDesert = `${assetPathPrefix}/2a252.png`
+const imgSoundBath = `${assetPathPrefix}/bcf2e.png`
+const imgNature = `${assetPathPrefix}/54a2d.png`
+
+/* Listed in reading order (right → left in RTL). */
 const categories = [
-  { name: "וולנס", image: img, left: -82 },
-  { name: "קהילה", image: img1, left: -8 },
-  { name: "ריטריטים", image: img2, left: 66 },
-  { name: "סדנאות", image: img3, left: 140 },
-  { name: "מדיטציה", image: img4, left: 214 },
-  { name: "יוגה", image: img5, left: 288, active: true },
+  { name: "יוגה", image: imgYoga, active: true },
+  { name: "מדיטציה", image: imgMeditation },
+  { name: "סדנאות", image: imgWorkshops },
+  { name: "ריטריטים", image: imgRetreats },
+  { name: "קהילה", image: imgCommunity },
+  { name: "וולנס", image: imgWellness },
 ]
 
 const eventCards = [
   {
-    title: "ריטריט יוגה בגליל",
-    location: "גליל עליון",
-    date: "16-16 בנובמבר",
-    image: img6,
-    left: -182,
+    title: "מדיטציית צלילים",
+    location: "מרכז אננדה, תל אביב",
+    date: "19 באפריל • 19:30",
+    image: imgSoundBath,
   },
   {
     title: "ויפאסנה במדבר",
     location: "מדבר יהודה",
     date: "2-4 בנובמבר",
-    image: img7,
-    left: 4,
+    image: imgDesert,
   },
   {
-    title: "מדיטציית צלילים",
-    location: "מרכז אננדה, תל אביב",
-    date: "19 באפריל • 19:30",
-    image: img8,
-    left: 190,
+    title: "ריטריט יוגה בגליל",
+    location: "גליל עליון",
+    date: "16-16 בנובמבר",
+    image: imgGalilee,
   },
 ]
 
-function Icon({ src, size }: { src: string; size: number }) {
+/* ---------- Shared primitives ---------- */
+
+const pressable = "transition-[background-color,transform] duration-150 active:scale-[0.97]"
+
+function IconButton({
+  children,
+  label,
+  tone = "sand",
+  className = "",
+}: {
+  children: ReactNode
+  label: string
+  tone?: "sand" | "overlay"
+  className?: string
+}) {
+  const tones = {
+    sand: "bg-sand text-ink active:bg-line",
+    overlay: "bg-black/30 text-white backdrop-blur-sm active:bg-black/45",
+  }
   return (
-    <img
-      alt=""
-      className="block shrink-0"
-      height={size}
-      src={src}
-      width={size}
-    />
+    <button
+      aria-label={label}
+      className={`flex size-10 items-center justify-center rounded-control ${tones[tone]} ${pressable} ${className}`}
+      type="button"
+    >
+      {children}
+    </button>
   )
 }
 
-function CategoryStrip() {
+function PrimaryButton({ children }: { children: ReactNode }) {
   return (
-    <nav
-      aria-label="קטגוריות"
-      dir="rtl"
-      className="relative h-[90px] w-[346px] shrink-0 overflow-x-auto"
+    <button
+      className={`inline-flex h-10 shrink-0 items-center gap-1 rounded-control bg-accent ps-4 pe-3 text-meta font-semibold text-white active:bg-accent-pressed ${pressable}`}
+      type="button"
     >
-      {categories.map((category) => (
-        <button
-          aria-current={category.active ? "page" : undefined}
-          className="absolute top-1/2 flex -translate-y-1/2 flex-col items-center border-0 bg-transparent p-0"
-          key={category.name}
-          style={{ left: category.left }}
-          type="button"
-        >
-          <span
-            className={`flex size-[58px] items-center justify-center overflow-hidden rounded-full p-[2px] ${
-              category.active ? "shadow-[0_0_0_1px_rgba(140,68,45,0.4)]" : ""
-            }`}
-          >
-            <span className="size-full overflow-hidden rounded-full">
-              <img
-                alt=""
-                className="h-full w-full object-cover"
-                src={category.image}
-                style={{ transform: "scale(1.8351)" }}
-              />
-            </span>
-          </span>
-          <span
-            className={`relative mt-[6px] pb-[2px] text-center text-[12px] leading-[16px] text-[#221e1b] ${
-              category.active
-                ? "font-['Assistant:Bold'] font-bold after:absolute after:bottom-0 after:left-1/2 after:h-[2px] after:w-[16px] after:-translate-x-1/2 after:rounded-full after:bg-[#221e1b]"
-                : "font-['Assistant:Regular'] font-medium opacity-85"
-            }`}
-          >
-            {category.name}
-          </span>
-        </button>
-      ))}
-    </nav>
+      {children}
+      <ChevronForwardIcon size={16} />
+    </button>
+  )
+}
+
+function MetaItem({ icon, children }: { icon: ReactNode; children: ReactNode }) {
+  return (
+    <span className="flex items-center gap-2">
+      {icon}
+      <span>{children}</span>
+    </span>
   )
 }
 
 function SectionHeader({ title }: { title: string }) {
   return (
-    <header className="flex h-[28px] w-full items-center justify-between">
+    <header className="flex items-center justify-between px-4">
+      <h2 className="text-heading font-bold text-ink">{title}</h2>
       <button
-        className="mt-[5px] flex items-center gap-[2px] border-0 bg-transparent p-0 font-['Assistant:Regular'] text-[12px] font-medium leading-[16px] text-[#766f66]"
+        className="-me-2 inline-flex h-10 items-center gap-1 rounded-control px-2 text-meta font-semibold text-accent transition-colors active:bg-sand"
         type="button"
       >
-        <Icon size={14} src={imgSvg7} />
         הצג הכל
+        <ChevronForwardIcon size={16} />
       </button>
-      <h2 className="font-['Assistant:Bold'] text-[20px] font-bold leading-[28px] tracking-[-0.5px] text-[#221e1b]">
-        {title}
-      </h2>
     </header>
   )
 }
 
-function EventCard({
-  date,
-  image,
-  left,
-  location,
-  title,
-}: typeof eventCards[number]) {
+/* ---------- Sections ---------- */
+
+function AppHeader() {
   return (
-    <article
-      className="absolute bottom-[4px] top-0 flex w-[172px] flex-col overflow-hidden rounded-[16px] bg-[#ede7df] shadow-[0_4px_20px_-2px_rgba(45,38,30,0.07)]"
-      dir="rtl"
-      style={{ left }}
-    >
-      <div className="relative h-[115px] shrink-0 overflow-hidden">
-        <img alt="" className="h-full w-full object-cover" src={image} />
+    <header className="sticky top-0 z-10 bg-canvas/90 pt-[env(safe-area-inset-top)] backdrop-blur-md">
+      <div className="grid h-16 grid-cols-[1fr_auto_1fr] items-center px-4">
+        <IconButton className="justify-self-start" label="פתח תפריט">
+          <MenuIcon />
+        </IconButton>
+        <img alt="המרחב" className="h-10 w-auto" height={40} src={imgLogo} width={121} />
         <button
-          aria-label="הוסף למועדפים"
-          className="absolute left-[10px] top-[10px] flex size-[28px] items-center justify-center rounded-full border-0 bg-black/20 p-0 backdrop-blur-[2px]"
+          className={`inline-flex h-10 items-center gap-1 justify-self-end rounded-control bg-sand ps-3 pe-2 text-meta font-semibold text-ink active:bg-line ${pressable}`}
           type="button"
         >
-          <Icon size={16} src={imgSvg8} />
+          <MapPinIcon size={16} />
+          <span className="ms-1">תל אביב</span>
+          <ChevronDownIcon className="text-ink-muted" size={16} />
         </button>
       </div>
-      <div className="flex min-h-0 flex-1 flex-col justify-between p-[12px] text-right">
-        <div>
-          <h3 className="font-['Assistant:Bold'] text-[13px] font-bold leading-[17.88px] text-[#221e1b]">
-            {title}
-          </h3>
-          <p className="font-['Assistant:Regular'] text-[11px] font-normal leading-[16.5px] text-[#766f66]">
-            {location}
-          </p>
+    </header>
+  )
+}
+
+function CategoryStrip() {
+  return (
+    <nav aria-label="קטגוריות">
+      <ul className="flex snap-x gap-4 overflow-x-auto scroll-px-4 px-4 py-1">
+        {categories.map((category) => (
+          <li className="shrink-0 snap-start" key={category.name}>
+            <button
+              aria-current={category.active ? "page" : undefined}
+              className="group flex w-16 flex-col items-center gap-2"
+              type="button"
+            >
+              <span
+                className={`flex size-16 items-center justify-center rounded-full border-2 p-0.5 transition-transform duration-150 group-active:scale-95 ${
+                  category.active ? "border-accent" : "border-transparent"
+                }`}
+              >
+                <img
+                  alt=""
+                  className="size-full rounded-full object-cover"
+                  height={56}
+                  src={category.image}
+                  width={56}
+                />
+              </span>
+              <span
+                className={`text-meta whitespace-nowrap ${
+                  category.active ? "font-bold text-ink" : "font-medium text-ink-muted"
+                }`}
+              >
+                {category.name}
+              </span>
+            </button>
+          </li>
+        ))}
+      </ul>
+    </nav>
+  )
+}
+
+function FeaturedRetreat() {
+  return (
+    <section aria-label="מומלץ" className="flex flex-col gap-4 px-4">
+      <article className="relative flex aspect-[5/4] flex-col justify-end overflow-hidden rounded-feature bg-hero p-6 text-white">
+        <img
+          alt=""
+          className="pointer-events-none absolute inset-0 size-full object-cover"
+          src={imgHero}
+        />
+        <div className="absolute inset-x-0 bottom-0 h-3/4 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
+        <IconButton className="absolute end-4 top-4" label="שמור למועדפים" tone="overlay">
+          <HeartIcon />
+        </IconButton>
+
+        <div className="relative flex flex-col gap-1">
+          <h1 className="text-display font-bold">יוגה מול הים</h1>
+          <p className="text-body text-white/90">ריטריט סופשבוע בחוף גורדון, תל אביב</p>
         </div>
-        <div className="flex items-center justify-end gap-[6px] border-t border-[#dfd6ca] pt-[9px] font-['Assistant:Regular'] text-[10px] font-medium leading-[15px] text-[rgba(34,30,27,0.8)]">
-          <span>{date}</span>
-          <Icon size={14} src={imgSvg9} />
+        <div className="relative mt-4 flex items-end justify-between gap-4">
+          <div className="flex flex-col gap-1 text-meta text-white/90">
+            <MetaItem icon={<CalendarIcon size={16} />}>17-17 באפריל</MetaItem>
+            <MetaItem icon={<MapPinIcon size={16} />}>חוף גורדון, תל אביב</MetaItem>
+          </div>
+          <PrimaryButton>לפרטים</PrimaryButton>
+        </div>
+      </article>
+
+      <div aria-hidden="true" className="flex items-center justify-center gap-2">
+        <span className="h-1.5 w-6 rounded-full bg-accent" />
+        <span className="h-1.5 w-2 rounded-full bg-line" />
+        <span className="h-1.5 w-2 rounded-full bg-line" />
+      </div>
+    </section>
+  )
+}
+
+function EventCard({ date, image, location, title }: (typeof eventCards)[number]) {
+  return (
+    <article className="flex w-60 shrink-0 snap-start flex-col overflow-hidden rounded-card border border-line/60 bg-surface shadow-card">
+      <div className="relative aspect-[3/2] overflow-hidden bg-sand">
+        <img alt="" className="size-full object-cover" src={image} />
+        <IconButton className="absolute end-2 top-2" label="הוסף למועדפים" tone="overlay">
+          <HeartIcon size={18} />
+        </IconButton>
+      </div>
+      <div className="flex flex-1 flex-col p-4">
+        <h3 className="text-title font-bold text-ink">{title}</h3>
+        <p className="mt-1 text-meta text-ink-muted">{location}</p>
+        <div className="mt-auto pt-4">
+          <div className="border-t border-line pt-4 text-meta text-ink-muted">
+            <MetaItem icon={<CalendarIcon size={16} />}>{date}</MetaItem>
+          </div>
         </div>
       </div>
     </article>
   )
 }
 
+function UpcomingEvents() {
+  return (
+    <section className="flex flex-col gap-4">
+      <SectionHeader title="אירועים קרובים" />
+      <div className="flex snap-x snap-mandatory gap-4 overflow-x-auto scroll-px-4 px-4 pb-2">
+        {eventCards.map((card) => (
+          <EventCard {...card} key={card.title} />
+        ))}
+      </div>
+    </section>
+  )
+}
+
+function FeaturedRetreats() {
+  return (
+    <section className="flex flex-col gap-4">
+      <SectionHeader title="ריטריטים נבחרים" />
+      <div className="px-4">
+        <article className="flex overflow-hidden rounded-card border border-line/60 bg-surface shadow-card">
+          <div className="flex min-w-0 flex-1 flex-col p-4">
+            <h3 className="text-title font-bold text-ink">חיבור לטבע</h3>
+            <p className="mt-1 text-meta text-ink-muted">ריטריט יוגה וסדנאות בטבע</p>
+            <div className="mt-4 flex flex-col gap-2 text-meta text-ink-muted">
+              <MetaItem icon={<MapPinIcon size={16} />}>גליל עליון</MetaItem>
+              <MetaItem icon={<CalendarIcon size={16} />}>25-23 במאי</MetaItem>
+            </div>
+            <div className="mt-4">
+              <PrimaryButton>לפרטים</PrimaryButton>
+            </div>
+          </div>
+          <div className="w-[42%] shrink-0 bg-sand">
+            <img alt="" className="size-full object-cover" src={imgNature} />
+          </div>
+        </article>
+      </div>
+    </section>
+  )
+}
+
 function App() {
   return (
-    <main className="flex size-full flex-col overflow-hidden border-[6px] border-solid border-[#202020] bg-[#f4efeb] p-[6px] shadow-[0_0_0_1px_rgba(0,0,0,0.1),0_25px_50px_-12px_rgba(0,0,0,0.25)]">
-      <header className="z-[2] flex w-full shrink-0 items-center justify-between px-[20px] pb-[8px] pt-[12px]">
-        <button
-          className="flex items-center gap-[6px] rounded-full border-0 bg-[rgba(234,226,215,0.9)] px-[14px] py-[6px]"
-          type="button"
-        >
-          <Icon size={14} src={imgSvg} />
-          <span className="pt-[2px] font-['Assistant:SemiBold'] text-[12px] font-semibold leading-[16px] text-[#221e1b]">
-            תל אביב
-          </span>
-          <Icon size={14} src={imgSvg1} />
-        </button>
-        <img
-          alt="המרחב"
-          className="h-[41px] w-[124px] object-cover"
-          src={imgImage1}
-        />
-        <button
-          aria-label="פתח תפריט"
-          className="flex size-[40px] items-center justify-center rounded-full border-0 bg-[rgba(234,226,215,0.8)] p-0"
-          type="button"
-        >
-          <Icon size={20} src={imgSvg2} />
-        </button>
-      </header>
-
-      <div className="z-[1] min-h-0 w-full flex-1">
-        <div className="flex size-full flex-col items-center gap-[20px] overflow-y-auto pb-[15.99px] pt-[8px]">
-          <CategoryStrip />
-
-          <section className="flex w-full shrink-0 flex-col gap-[10px] px-[16px]">
-            <article className="relative flex min-h-[260px] w-full flex-col gap-[23px] overflow-hidden rounded-[28px] bg-[#292524] p-[20px] shadow-[0_4px_20px_-2px_rgba(45,38,30,0.07)]">
-              <img
-                alt=""
-                className="pointer-events-none absolute left-[-18.95%] top-0 h-full w-[137.9%] max-w-none"
-                src={imgBackgroundShadow}
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-[rgba(0,0,0,0.85)] via-[rgba(0,0,0,0.35)] to-[rgba(0,0,0,0.2)]" />
-              <button
-                aria-label="שמור למועדפים"
-                className="absolute left-[20px] top-[20px] z-[1] flex size-[36px] items-center justify-center rounded-full border-0 bg-black/25 p-0 backdrop-blur-[6px]"
-                type="button"
-              >
-                <Icon size={20} src={imgSvg3} />
-              </button>
-              <div
-                className="relative mt-auto flex w-full flex-col items-end gap-[4px] text-right"
-                dir="rtl"
-              >
-                <h1 className="font-['Assistant:Bold'] text-[24px] font-bold leading-[33px] tracking-[-0.6px] text-white">
-                  יוגה מול הים
-                </h1>
-                <p className="font-['Assistant:Light'] text-[12px] font-light leading-[16px] text-white/90">
-                  ריטריט סופשבוע בחוף גורדון, תל אביב
-                </p>
-                <div className="flex w-full flex-row-reverse items-center justify-between pt-[12px]">
-                  <button
-                    className="flex items-center gap-[4px] rounded-full border-0 bg-[#8c442d] px-[14px] py-[6px] font-['Assistant:SemiBold'] text-[12px] font-semibold leading-[16px] text-white"
-                    type="button"
-                  >
-                    <Icon size={14} src={imgSvg4} />
-                    לפרטים
-                  </button>
-                  <div className="flex flex-row-reverse items-center gap-[12px] font-['Assistant:Regular'] text-[11px] font-normal leading-[16.5px] text-white/95">
-                    <span className="flex flex-row-reverse items-center gap-[6px]">
-                      חוף גורדון, תל אביב
-                      <Icon size={14} src={imgSvg5} />
-                    </span>
-                    <span className="flex flex-row-reverse items-center gap-[6px]">
-                      17-17 באפריל
-                      <Icon size={14} src={imgSvg6} />
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </article>
-            <div className="flex w-full items-center justify-center gap-[6px]">
-              <span className="h-[4px] w-[14px] rounded-full bg-[#e5dcd0]" />
-              <span className="h-[4px] w-[14px] rounded-full bg-[#d8cec0]" />
-              <span className="h-[4px] w-[24px] rounded-full bg-[#8c442d]" />
-            </div>
-          </section>
-
-          <section className="flex w-full shrink-0 flex-col gap-[12px]">
-            <div className="px-[20px]">
-              <SectionHeader title="אירועים קרובים" />
-            </div>
-            <div className="relative h-[215.38px] w-full overflow-x-auto" dir="rtl">
-              {eventCards.map((card) => (
-                <EventCard {...card} key={card.title} />
-              ))}
-            </div>
-          </section>
-
-          <section className="flex w-full shrink-0 flex-col gap-[12px] px-[16px] pb-[16px]">
-            <SectionHeader title="ריטריטים נבחרים" />
-            <article
-              className="flex min-h-[145px] w-full overflow-hidden rounded-[24px] bg-[#ece4d8] shadow-[0_4px_20px_-2px_rgba(45,38,30,0.07)]"
-              dir="ltr"
-            >
-              <div className="min-w-0 flex-1">
-                <img alt="" className="size-full object-cover" src={img9} />
-              </div>
-              <div
-                className="flex min-w-0 flex-1 flex-col justify-between px-[14px] pb-[14.01px] pt-[14px] text-right"
-                dir="rtl"
-              >
-                <div>
-                  <h3 className="font-['Assistant:Bold'] text-[16px] font-bold leading-[20px] text-[#221e1b]">
-                    חיבור לטבע
-                  </h3>
-                  <p className="mt-[3px] font-['Assistant:Regular'] text-[11px] font-normal leading-[15.13px] text-[#766f66]">
-                    ריטריט יוגה וסדנאות בטבע
-                  </p>
-                  <div className="mt-[6.99px] flex flex-col gap-[4px] font-['Assistant:Regular'] text-[10px] font-normal leading-[15px] text-[rgba(34,30,27,0.8)]">
-                    <span className="flex items-center gap-[6px]">
-                      <Icon size={12} src={imgSvg10} />
-                      גליל עליון
-                    </span>
-                    <span className="flex items-center gap-[6px]">
-                      <Icon size={12} src={imgSvg11} />
-                      25-23 במאי
-                    </span>
-                  </div>
-                </div>
-                <button
-                  className="flex w-fit items-center gap-[4px] rounded-full border-0 bg-[#8c442d] px-[14px] py-[6px] font-['Assistant:SemiBold'] text-[12px] font-semibold leading-[16px] text-white"
-                  type="button"
-                >
-                  <Icon size={12} src={imgSvg12} />
-                  לפרטים
-                </button>
-              </div>
-            </article>
-          </section>
-        </div>
-      </div>
-    </main>
+    <div className="min-h-full bg-canvas">
+      <AppHeader />
+      <main className="flex flex-col gap-8 pt-2 pb-[calc(env(safe-area-inset-bottom)+32px)]">
+        <CategoryStrip />
+        <FeaturedRetreat />
+        <UpcomingEvents />
+        <FeaturedRetreats />
+      </main>
+    </div>
   )
 }
 
