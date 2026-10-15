@@ -20,14 +20,20 @@ function ComingSoon() {
   )
 }
 
+/* Secondary links: pages of the site (hash routes). */
+const secondaryNav = [{ label: "אודות המרחב", href: "#/about", page: "about" }] as const
+
 export default function SideDrawer({
   open,
   onClose,
   returnFocusTo,
+  current = "home",
 }: {
   open: boolean
   onClose: () => void
   returnFocusTo: React.RefObject<HTMLElement | null>
+  /** Page currently shown, for the active state of page links. */
+  current?: "home" | "about"
 }) {
   const titleId = useId()
   const panelRef = useRef<HTMLDivElement>(null)
@@ -41,8 +47,19 @@ export default function SideDrawer({
     if (open || !pendingTarget.current) return
     const target = pendingTarget.current
     pendingTarget.current = null
+    // A page link ("#/about") is a route change.
+    if (target.startsWith("#/")) {
+      if (window.location.hash !== target) window.location.hash = target
+      return
+    }
+    const section = document.getElementById(target)
+    // Not on the home page (e.g. on About): go home, where the router scrolls to the section.
+    if (!section) {
+      window.location.hash = `#${target}`
+      return
+    }
     const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches
-    document.getElementById(target)?.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "start" })
+    section.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "start" })
     history.replaceState(null, "", `#${target}`)
   }, [open])
 
@@ -138,6 +155,28 @@ export default function SideDrawer({
             <ComingSoon />
           </p>
         </section>
+
+        <nav aria-label="קישורים נוספים" className="mx-6 mt-8 border-t border-ink/10 pt-6">
+          <ul>
+            {secondaryNav.map((item) => {
+              const active = current === item.page
+              return (
+                <li key={item.href}>
+                  <a
+                    aria-current={active ? "page" : undefined}
+                    className={`flex h-12 items-center text-title font-semibold transition-colors active:text-accent ${
+                      active ? "text-accent" : "text-ink"
+                    }`}
+                    href={item.href}
+                    onClick={(e) => navigate(e, item.href)}
+                  >
+                    {item.label}
+                  </a>
+                </li>
+              )
+            })}
+          </ul>
+        </nav>
       </div>
     </div>
   )

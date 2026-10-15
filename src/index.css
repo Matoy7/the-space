@@ -38,6 +38,9 @@
   --text-headline: 32px;
   --text-headline--line-height: 40px;
   --text-headline--letter-spacing: -0.5px;
+  --text-page-title: 36px;
+  --text-page-title--line-height: 44px;
+  --text-page-title--letter-spacing: -0.5px;
 
   /* Radius scale */
   --radius-control: 9999px;

@@ -1,4 +1,5 @@
-import { useEffect, useLayoutEffect, useRef, useState, type RefObject } from "react"
+import { useEffect, useLayoutEffect, useRef, useState, type ReactNode, type RefObject } from "react"
+import AboutPage from "./AboutPage"
 import EventPage from "./EventPage"
 import FavoritesProvider from "./favorites"
 import SideDrawer from "./SideDrawer"
@@ -374,10 +375,12 @@ function SiteFooter() {
   )
 }
 
-/* Hash routes keep deep links working on GitHub Pages: "#/event/<id>" is an event page; any other hash is the home page. */
-type Route = { name: "home" } | { name: "event"; id: string }
+/* Hash routes keep deep links working on GitHub Pages: "#/event/<id>" is an event page, "#/about" the about page;
+   any other hash is the home page. */
+type Route = { name: "home" } | { name: "about" } | { name: "event"; id: string }
 
 function parseRoute(hash: string): Route {
+  if (hash === "#/about") return { name: "about" }
   const match = hash.match(/^#\/event\/([\w-]+)$/)
   return match && events[match[1]] ? { name: "event", id: match[1] } : { name: "home" }
 }
@@ -394,10 +397,8 @@ function useRoute() {
     const onHashChange = () => {
       const next = parseRoute(window.location.hash)
       const prev = routeRef.current
-      if (prev.name === "home" && next.name === "event") {
-        homeScrollY.current = window.scrollY
-        openedFromHome.current = true
-      }
+      if (prev.name === "home" && next.name !== "home") homeScrollY.current = window.scrollY
+      if (prev.name === "home" && next.name === "event") openedFromHome.current = true
       routeRef.current = next
       setRoute(next)
     }
@@ -407,7 +408,7 @@ function useRoute() {
 
   // Event pages open at the top; returning home restores the previous position (or jumps to a section anchor).
   useLayoutEffect(() => {
-    if (route.name === "event") {
+    if (route.name !== "home") {
       window.scrollTo({ top: 0, behavior: "instant" })
       return
     }
@@ -432,12 +433,22 @@ function useRoute() {
   return { route, goHome }
 }
 
-function HomePage({ category, setCategory }: { category: string; setCategory: (next: string) => void }) {
+/** Shared page chrome: the site header (logo, menu, bell) and its side menu. */
+function SiteShell({ current, children }: { current: "home" | "about"; children: ReactNode }) {
   const [menuOpen, setMenuOpen] = useState(false)
   const menuButtonRef = useRef<HTMLButtonElement>(null)
   return (
     <div className="min-h-full bg-canvas">
       <AppHeader menuButtonRef={menuButtonRef} menuOpen={menuOpen} onOpenMenu={() => setMenuOpen(true)} />
+      {children}
+      <SideDrawer current={current} onClose={() => setMenuOpen(false)} open={menuOpen} returnFocusTo={menuButtonRef} />
+    </div>
+  )
+}
+
+function HomePage({ category, setCategory }: { category: string; setCategory: (next: string) => void }) {
+  return (
+    <SiteShell current="home">
       <main className="flex flex-col gap-8 pt-2 pb-8">
         <CategoryStrip onSelect={setCategory} selected={category} />
         <FeaturedCarousel />
@@ -445,8 +456,7 @@ function HomePage({ category, setCategory }: { category: string; setCategory: (n
         <FeaturedRetreats />
       </main>
       <SiteFooter />
-      <SideDrawer onClose={() => setMenuOpen(false)} open={menuOpen} returnFocusTo={menuButtonRef} />
-    </div>
+    </SiteShell>
   )
 }
 
@@ -458,6 +468,10 @@ function App() {
     <FavoritesProvider>
       {route.name === "event" ? (
         <EventPage event={events[route.id]} key={route.id} onBack={goHome} />
+      ) : route.name === "about" ? (
+        <SiteShell current="about">
+          <AboutPage />
+        </SiteShell>
       ) : (
         <HomePage category={category} setCategory={setCategory} />
       )}
