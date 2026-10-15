@@ -117,8 +117,17 @@ export function SectionHeader({
  * Date pill on a card photo (top-left in RTL, no icon). Renders nothing when the event has no valid date.
  * `inset` sets the distance from the photo edges (8px on cards, 16px on the large carousel card).
  */
-export function DateBadge({ event, inset = "end-2 top-2" }: { event: SiteEvent; inset?: string }) {
-  const label = badgeLabel(event)
+export function DateBadge({
+  event,
+  inset = "end-2 top-2",
+  showTime = true,
+}: {
+  event: SiteEvent
+  inset?: string
+  /** Off on compact cards, where "date · time" would run into the heart. */
+  showTime?: boolean
+}) {
+  const label = badgeLabel(event, showTime)
   if (!label) return null
   return (
     <span
@@ -186,14 +195,17 @@ export function RegisterButton({
   )
 }
 
-/** Fixed event price for the bottom of a card; renders nothing when the event has no price. */
-export function PriceTag({ event, tone = "card", className = "" }: { event: SiteEvent; tone?: "card" | "overlay"; className?: string }) {
+/**
+ * Price pill on a card photo (bottom-left in RTL), styled like the date badge. Renders nothing when the event
+ * has no price. `inset` sets the distance from the photo edges (8px on cards, 16px on the large carousel card).
+ */
+export function PriceBadge({ event, inset = "end-2 bottom-2" }: { event: SiteEvent; inset?: string }) {
   const label = priceLabel(event)
   if (!label) return null
   return (
     <span
       aria-label={`מחיר: ${label}`}
-      className={`shrink-0 text-title font-bold whitespace-nowrap ${tone === "overlay" ? "text-white" : "text-ink"} ${className}`}
+      className={`pointer-events-none absolute z-[1] flex h-8 items-center rounded-control bg-surface/90 px-3 text-meta font-bold whitespace-nowrap text-ink shadow-sm backdrop-blur-sm ${inset}`}
     >
       {label}
     </span>

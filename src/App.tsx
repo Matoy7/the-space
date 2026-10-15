@@ -5,7 +5,6 @@ import SideDrawer from "./SideDrawer"
 import {
   byIds,
   eventHref,
-  priceLabel,
   events,
   featuredIds,
   images,
@@ -13,8 +12,8 @@ import {
   upcomingIds,
   type SiteEvent,
 } from "./data"
-import { BellIcon, ChevronForwardIcon, MapPinIcon, MenuIcon } from "./icons"
-import { DateBadge, FavoriteButton, MetaItem, PriceTag, RegisterButton, SectionHeader, pressable } from "./ui"
+import { BellIcon, MapPinIcon, MenuIcon } from "./icons"
+import { DateBadge, FavoriteButton, MetaItem, PriceBadge, RegisterButton, SectionHeader, pressable } from "./ui"
 
 const featuredRetreats = byIds(featuredIds)
 const eventCards = byIds(upcomingIds)
@@ -22,6 +21,7 @@ const selectedRetreats = byIds(selectedRetreatIds)
 
 const AUTOPLAY_MS = 2500
 const SWIPE_THRESHOLD_PX = 40
+const LONG_PRESS_MS = 500
 
 
 /* Listed in reading order (right → left in RTL). */
@@ -151,24 +151,19 @@ function FeaturedSlide({
         src={image}
       />
       <div className="absolute inset-x-0 bottom-0 h-3/4 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
-      <FavoriteButton className="absolute start-4 top-4" id={id} />
+      {/* The whole slide opens the event page; text lets taps through, the buttons sit above it. */}
+      <a aria-label={title} className="absolute inset-0" href={eventHref(id)} />
+      <FavoriteButton className="absolute start-4 top-4 z-[1]" id={id} />
       <DateBadge event={event} inset="end-4 top-4" />
 
-      <h2 className="relative text-display font-bold">{title}</h2>
-      <div className="relative mt-1 text-meta text-white/90">
+      <h2 className="pointer-events-none relative text-display font-bold">{title}</h2>
+      <div className="pointer-events-none relative mt-1 text-meta text-white/90">
         <MetaItem icon={<MapPinIcon size={16} />}>{location}</MetaItem>
       </div>
-      <div className="relative mt-4 flex flex-wrap items-center gap-2">
+      <div className="relative mt-4 flex items-center">
         <RegisterButton event={event} variant="overlay" />
-        <a
-          className={`inline-flex h-10 shrink-0 items-center gap-1 rounded-control border border-white/50 bg-white/15 ps-4 pe-3 text-meta font-semibold text-white backdrop-blur-sm active:bg-white/25 ${pressable}`}
-          href={eventHref(id)}
-        >
-          לפרטים
-          <ChevronForwardIcon size={16} />
-        </a>
-        <PriceTag className="ms-auto" event={event} tone="overlay" />
       </div>
+      <PriceBadge event={event} inset="end-6 bottom-7" />
     </article>
   )
 }
@@ -182,6 +177,9 @@ function FeaturedCarousel() {
   // Bumped on every manual navigation so the autoplay timer restarts from zero.
   const [timerEpoch, setTimerEpoch] = useState(0)
   const pointerStartX = useRef<number | null>(null)
+  // Set when a gesture was a swipe or a press-and-hold (pause), so the click that follows it doesn't open the event.
+  const suppressClick = useRef(false)
+  const pointerDownAt = useRef(0)
 
   useEffect(() => {
     const onVisibility = () => setPageHidden(document.hidden)
@@ -205,9 +203,11 @@ function FeaturedCarousel() {
     const startX = pointerStartX.current
     pointerStartX.current = null
     setInteracting(false)
+    if (startX !== null && performance.now() - pointerDownAt.current > LONG_PRESS_MS) suppressClick.current = true
     if (startX === null || clientX === null) return
     const dx = clientX - startX
     if (Math.abs(dx) < SWIPE_THRESHOLD_PX) return
+    suppressClick.current = true
     // RTL: the next slide sits to the left, so swiping left (dx < 0) advances.
     goTo(dx < 0 ? active + 1 : active - 1)
   }
@@ -226,8 +226,16 @@ function FeaturedCarousel() {
       <div
         aria-live={paused ? "polite" : "off"}
         className="relative aspect-[5/4] touch-pan-y overflow-hidden rounded-feature bg-hero select-none"
+        onClickCapture={(e) => {
+          if (!suppressClick.current) return
+          suppressClick.current = false
+          e.preventDefault()
+          e.stopPropagation()
+        }}
         onPointerCancel={() => endInteraction(null)}
         onPointerDown={(e) => {
+          suppressClick.current = false
+          pointerDownAt.current = performance.now()
           pointerStartX.current = e.clientX
           setInteracting(true)
         }}
@@ -269,6 +277,7 @@ function EventCard({ event }: { event: SiteEvent }) {
     <article className="relative flex w-60 shrink-0 snap-start flex-col overflow-hidden rounded-card border border-line/60 bg-surface shadow-card">
       <div className="relative aspect-[3/2] overflow-hidden bg-sand">
         <img alt="" className="size-full object-cover" src={image} />
+        <PriceBadge event={event} />
       </div>
       <FavoriteButton className="absolute start-2 top-2 z-[1]" id={id} />
       <DateBadge event={event} />
@@ -281,9 +290,8 @@ function EventCard({ event }: { event: SiteEvent }) {
         </h3>
         <p className="mt-1 text-meta text-ink-muted">{location}</p>
         <div className="mt-auto pt-4">
-          <div className="flex items-center gap-3 border-t border-line pt-4">
-            <PriceTag event={event} />
-            <RegisterButton className={priceLabel(event) ? "flex-1" : "w-full"} event={event} />
+          <div className="border-t border-line pt-4">
+            <RegisterButton className="w-full" event={event} />
           </div>
         </div>
       </div>
@@ -325,14 +333,14 @@ function RetreatCard({ event }: { event: SiteEvent }) {
         <div className="mt-4 text-meta text-ink-muted">
           <MetaItem icon={<MapPinIcon size={16} />}>{location}</MetaItem>
         </div>
-        <div className="mt-auto flex flex-wrap items-center gap-x-3 gap-y-2 pt-4">
-          <PriceTag event={event} />
+        <div className="mt-auto pt-4">
           <RegisterButton event={event} />
         </div>
       </div>
       <div className="relative w-[42%] shrink-0 bg-sand">
         <img alt="" className="size-full object-cover" draggable={false} src={image} />
         <DateBadge event={event} />
+        <PriceBadge event={event} />
       </div>
     </article>
   )

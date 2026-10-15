@@ -177,10 +177,10 @@ export function priceLabel(e: SiteEvent): string | null {
 }
 
 /** Compact badge text, e.g. "19 באפר׳ · 19:30"; null when the event has no valid date. */
-export function badgeLabel(e: SiteEvent): string | null {
+export function badgeLabel(e: SiteEvent, includeTime = true): string | null {
   const date = formatEventDates(e.dates, "short")
   if (!date) return null
-  return e.time ? `${date} · ${e.time}` : date
+  return includeTime && e.time ? `${date} · ${e.time}` : date
 }
 
 /** Splits "<venue>, <area>" into its parts; a bare area has no venue line. */
