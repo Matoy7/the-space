@@ -60,3 +60,5 @@ export const BellIcon = createIcon(
     <path d="M10.3 20.5a1.9 1.9 0 0 0 3.4 0" />
   </>,
 )
+
+export const CloseIcon = createIcon(<path d="M6 6l12 12M18 6 6 18" />)

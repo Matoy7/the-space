@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState, type ReactNode } from "react"
+import { useEffect, useRef, useState, type ReactNode, type RefObject } from "react"
+import SideDrawer from "./SideDrawer"
 import {
   BellIcon,
   CalendarIcon,
@@ -143,13 +144,30 @@ function SectionHeader({ title }: { title: string }) {
 /** Shared header control: 40px, fully rounded, warm-beige surface, 20px ink icon. */
 const headerControl = `flex h-10 items-center justify-center rounded-control bg-header-control text-ink active:bg-line ${pressable}`
 
-function AppHeader() {
+function AppHeader({
+  menuButtonRef,
+  menuOpen,
+  onOpenMenu,
+}: {
+  menuButtonRef: RefObject<HTMLButtonElement | null>
+  menuOpen: boolean
+  onOpenMenu: () => void
+}) {
   return (
     <header className="sticky top-0 z-10 bg-header pt-[env(safe-area-inset-top)]">
       <h1 className="sr-only">המרחב</h1>
       {/* Equal 1fr side columns keep the location centred on the viewport, not just between the buttons. */}
       <div className="grid h-14 grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2 px-4">
-        <button aria-label="פתח תפריט" className={`${headerControl} w-10 justify-self-start`} type="button">
+        <button
+          aria-controls="site-drawer"
+          aria-expanded={menuOpen}
+          aria-haspopup="dialog"
+          aria-label="פתח תפריט"
+          className={`${headerControl} w-10 justify-self-start`}
+          onClick={onOpenMenu}
+          ref={menuButtonRef}
+          type="button"
+        >
           <MenuIcon />
         </button>
         <button
@@ -482,9 +500,11 @@ function SiteFooter() {
 }
 
 function App() {
+  const [menuOpen, setMenuOpen] = useState(false)
+  const menuButtonRef = useRef<HTMLButtonElement>(null)
   return (
     <div className="min-h-full bg-canvas">
-      <AppHeader />
+      <AppHeader menuButtonRef={menuButtonRef} menuOpen={menuOpen} onOpenMenu={() => setMenuOpen(true)} />
       <main className="flex flex-col gap-8 pt-2 pb-8">
         <CategoryStrip />
         <FeaturedCarousel />
@@ -492,6 +512,7 @@ function App() {
         <FeaturedRetreats />
       </main>
       <SiteFooter />
+      <SideDrawer onClose={() => setMenuOpen(false)} open={menuOpen} returnFocusTo={menuButtonRef} />
     </div>
   )
 }
