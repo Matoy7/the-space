@@ -10,6 +10,7 @@ import {
 } from "./icons"
 
 const assetPathPrefix = `${import.meta.env.BASE_URL}assets`
+const imgLogo = `${assetPathPrefix}/77585.png`
 const imgWellness = `${assetPathPrefix}/2af54.png`
 const imgCommunity = `${assetPathPrefix}/089e8.png`
 const imgRetreats = `${assetPathPrefix}/71e6d.png`
@@ -376,9 +377,12 @@ function EventCard({ date, image, location, title }: (typeof eventCards)[number]
   )
 }
 
+/* Sticky header (56px) + 8px breathing room when jumping to a section via an anchor. */
+const anchorOffset = "scroll-mt-[calc(env(safe-area-inset-top)+64px)]"
+
 function UpcomingEvents() {
   return (
-    <section className="flex flex-col gap-4">
+    <section className={`flex flex-col gap-4 ${anchorOffset}`} id="events">
       <SectionHeader title="אירועים קרובים" />
       <div className="flex snap-x snap-mandatory gap-4 overflow-x-auto scroll-px-4 px-4 pb-2">
         {eventCards.map((card) => (
@@ -391,7 +395,7 @@ function UpcomingEvents() {
 
 function FeaturedRetreats() {
   return (
-    <section className="flex flex-col gap-4">
+    <section className={`flex flex-col gap-4 ${anchorOffset}`} id="retreats">
       <SectionHeader title="ריטריטים נבחרים" />
       <div className="px-4">
         <article className="flex overflow-hidden rounded-card border border-line/60 bg-surface shadow-card">
@@ -415,16 +419,53 @@ function FeaturedRetreats() {
   )
 }
 
+/* Only destinations that exist on the site today (in-page sections). */
+const footerLinks = [
+  { label: "גילוי אירועים", href: "#events" },
+  { label: "ריטריטים", href: "#retreats" },
+]
+
+function SiteFooter() {
+  const year = new Date().getFullYear()
+  return (
+    <footer className="rounded-t-feature bg-sand px-4 pt-8 pb-[calc(env(safe-area-inset-bottom)+24px)]">
+      <img alt="המרחב" className="h-10 w-auto" height={40} src={imgLogo} width={121} />
+      <p className="mt-4 max-w-[34ch] text-meta text-ink-muted">
+        אירועי וולנס, סדנאות וריטריטים מכל הארץ, מרוכזים במקום אחד — כדי שיהיה קל למצוא את מה שמתאים לכם.
+      </p>
+
+      <nav aria-label="ניווט בתחתית העמוד" className="mt-6 border-t border-ink/10">
+        <ul>
+          {footerLinks.map((link) => (
+            <li className="border-b border-ink/10" key={link.href}>
+              <a
+                className="flex h-12 items-center justify-between text-body font-semibold text-ink transition-colors active:text-accent"
+                href={link.href}
+              >
+                {link.label}
+                <ChevronForwardIcon className="text-ink-muted" size={16} />
+              </a>
+            </li>
+          ))}
+        </ul>
+      </nav>
+
+      <p className="mt-6 text-meta text-ink-muted">© {year} המרחב. כל הזכויות שמורות.</p>
+    </footer>
+  )
+}
+
 function App() {
   return (
     <div className="min-h-full bg-canvas">
       <AppHeader />
-      <main className="flex flex-col gap-8 pt-2 pb-[calc(env(safe-area-inset-bottom)+32px)]">
+      <main className="flex flex-col gap-8 pt-2 pb-8">
         <CategoryStrip />
         <FeaturedCarousel />
         <UpcomingEvents />
         <FeaturedRetreats />
       </main>
+      <SiteFooter />
     </div>
   )
 }
