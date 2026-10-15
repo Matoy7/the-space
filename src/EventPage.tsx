@@ -211,7 +211,7 @@ export default function EventPage({ event, onBack }: { event: SiteEvent; onBack:
           ) : (
             <span />
           )}
-          <RegisterButton event={event} variant="bar" />
+          <RegisterButton event={event} />
         </div>
       </div>
     </div>

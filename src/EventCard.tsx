@@ -1,9 +1,9 @@
 import { badgeLabel, eventHref, priceLabel, type SiteEvent } from "./data"
-import { CalendarIcon } from "./icons"
-import { RegisterButton } from "./ui"
+import { CalendarIcon, MapPinIcon } from "./icons"
 
 /* The one event card used everywhere (carousel, events, retreats, related events), following the approved reference:
-   clean photo → [date · time | price] row → title → muted location → divider → registration button. */
+   clean photo → [date · time | price] row → title → muted location. The whole card opens the event page,
+   where registration lives. The featured (carousel) card keeps its title and location over the photo. */
 
 type CardSize = "featured" | "rail" | "wide" | "compact"
 
@@ -45,12 +45,28 @@ export function PricePill({ event, compact = false }: { event: SiteEvent; compac
 
 export default function EventCard({ event, size }: { event: SiteEvent; size: CardSize }) {
   const s = sizes[size]
+  const featured = size === "featured"
+  // The ::after overlay makes the whole card the tap target for this link.
+  const link = (
+    <a className="after:absolute after:inset-0 after:content-['']" href={eventHref(event.id)}>
+      {event.title}
+    </a>
+  )
   return (
     <article
       className={`relative flex flex-col overflow-hidden rounded-card border border-line/60 bg-surface shadow-card ${s.card}`}
     >
-      <div className="aspect-[3/2] bg-sand">
+      <div className="relative aspect-[3/2] bg-sand">
         <img alt="" className="size-full object-cover" draggable={false} src={event.image} />
+        {featured && (
+          <div className="absolute inset-x-0 bottom-0 flex flex-col justify-end bg-gradient-to-t from-black/75 via-black/35 to-transparent px-5 pt-16 pb-4 text-white">
+            <h3 className={`font-bold ${s.title}`}>{link}</h3>
+            <p className="mt-1 flex items-center gap-1 text-meta text-white/90">
+              <MapPinIcon size={16} />
+              {event.location}
+            </p>
+          </div>
+        )}
       </div>
       <div className={`flex flex-1 flex-col ${s.body}`}>
         {/* RTL: date on the right, price on the left. */}
@@ -58,18 +74,12 @@ export default function EventCard({ event, size }: { event: SiteEvent; size: Car
           <EventDate event={event} showTime={s.showTime} />
           <PricePill compact={size === "compact"} event={event} />
         </div>
-        <h3 className={`mt-3 font-bold text-ink ${s.title}`}>
-          {/* The ::after overlay makes the whole card the tap target for this link. */}
-          <a className="after:absolute after:inset-0 after:content-['']" href={eventHref(event.id)}>
-            {event.title}
-          </a>
-        </h3>
-        <p className="mt-1 text-meta text-ink-muted">{event.location}</p>
-        <div className="mt-auto pt-4">
-          <div className="border-t border-line pt-4">
-            <RegisterButton className="w-full" event={event} />
-          </div>
-        </div>
+        {!featured && (
+          <>
+            <h3 className={`mt-3 font-bold text-ink ${s.title}`}>{link}</h3>
+            <p className="mt-1 text-meta text-ink-muted">{event.location}</p>
+          </>
+        )}
       </div>
     </article>
   )
