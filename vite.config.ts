@@ -4,11 +4,15 @@ import tailwindcss from '@tailwindcss/vite'
 import path from 'node:path'
 
 import siteConfiguration from './.figma/make/site.json'
+import { formatEventDates } from './src/dates'
+import { events, sharePath } from './src/data'
 
 
 // Vite config — https://vitejs.dev/config/
 // GitHub Pages project URL: https://matoy7.github.io/the-space/
 const GITHUB_PAGES_BASE = '/the-space/'
+// Absolute site URL for link previews (crawlers need absolute og:url / og:image). Override with SITE_URL.
+const SITE_URL = (process.env.SITE_URL ?? 'https://matoy7.github.io/the-space/').replace(/\/?$/, '/')
 
 export default defineConfig(({ command, mode }) => {
   // .figma/make/deploy-preview passes `--mode development` for cached-preview builds.
@@ -28,6 +32,7 @@ export default defineConfig(({ command, mode }) => {
 react(),
       tailwindcss(),
       figmaSiteConfiguration(siteConfiguration),
+      socialPreviews(),
       figmaErrorOverlayReplay(),
       figmaReactRefreshBoundaryFallback(),
       figmaMakeKitPlugin({ storiesGlob: '/src/**/*.stories.{ts,tsx,js,jsx}' }),
@@ -398,6 +403,90 @@ function figmaMakeKitPlugin(options: { storiesGlob: string | string[] }): Plugin
           next(err as Error)
         }
       })
+    },
+  }
+}
+
+/**
+ * Link previews for WhatsApp, Facebook, X, Telegram, LinkedIn…
+ * Crawlers don't run JavaScript and ignore the URL hash, so "#/event/<id>" routes can't carry their own tags.
+ * - index.html gets the site preview (og:title / og:description come from site.json via the plugin above).
+ * - Each event gets a static share page at e/<id>/ with its own tags; a JS-only redirect (crawlers don't run it)
+ *   sends people on to the event page. Images are pre-rendered by scripts/og-images.ts into public/og/.
+ */
+function socialPreviews(): Plugin {
+  const attr = (v: string) => v.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+  const imageTags = (url: string, alt: string) => [
+    ['og:image', url],
+    ['og:image:secure_url', url],
+    ['og:image:type', 'image/jpeg'],
+    ['og:image:width', '1200'],
+    ['og:image:height', '630'],
+    ['og:image:alt', alt],
+    ['twitter:card', 'summary_large_image'],
+    ['twitter:image', url],
+  ]
+  const common = [
+    ['og:site_name', 'המרחב'],
+    ['og:locale', 'he_IL'],
+  ]
+  const meta = ([key, content]: string[]) =>
+    `<meta ${key.startsWith('twitter:') ? 'name' : 'property'}="${key}" content="${attr(content)}">`
+
+  return {
+    name: 'social-previews',
+    apply: 'build',
+    transformIndexHtml() {
+      const description = siteConfiguration.description ?? ''
+      return [
+        ...common,
+        ['og:type', 'website'],
+        ['og:url', SITE_URL],
+        ...imageTags(`${SITE_URL}og/home.jpg`, 'המרחב — אירועי וולנס, סדנאות וריטריטים'),
+        ['twitter:title', 'המרחב'],
+        ['twitter:description', description],
+      ].map(([property, content]) => ({
+        tag: 'meta',
+        attrs: { [property.startsWith('twitter:') ? 'name' : 'property']: property, content },
+        injectTo: 'head' as const,
+      }))
+    },
+    generateBundle() {
+      for (const event of Object.values(events)) {
+        const url = `${SITE_URL}${sharePath(event.id)}`
+        const when = [formatEventDates(event.dates, 'long'), event.time].filter(Boolean).join(' · ')
+        const summary = event.subtitle ?? event.about?.split(/(?<=[.!?])\s/)[0] ?? ''
+        const description = [[when, event.location].filter(Boolean).join(' · '), summary].filter(Boolean).join(' — ')
+        const title = `${event.title} · המרחב`
+        const target = `../../#/event/${event.id}`
+        const tags = [
+          ...common,
+          ['og:type', 'website'],
+          ['og:url', url],
+          ['og:title', event.title],
+          ['og:description', description],
+          ...imageTags(`${SITE_URL}og/${event.id}.jpg`, event.title),
+          ['twitter:title', event.title],
+          ['twitter:description', description],
+        ]
+        const html = `<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>${attr(title)}</title>
+<meta name="description" content="${attr(description)}">
+${siteConfiguration.robots?.index === false ? '<meta name="robots" content="noindex, nofollow">\n' : ''}<link rel="canonical" href="${attr(url)}">
+${tags.map(meta).join('\n')}
+<script>location.replace(${JSON.stringify(target)})</script>
+</head>
+<body style="font-family:sans-serif;background:#f4efeb;color:#221e1b;padding:24px">
+<p><a href="${attr(target)}">${attr(event.title)} · לצפייה באירוע</a></p>
+</body>
+</html>
+`
+        this.emitFile({ type: 'asset', fileName: `${sharePath(event.id)}index.html`, source: html })
+      }
     },
   }
 }

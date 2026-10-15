@@ -2,7 +2,9 @@
 
 import { formatEventDates, type EventDates } from "./dates"
 
-const asset = (file: string) => `${import.meta.env.BASE_URL}assets/${file}`
+/* import.meta.env exists in the app bundle; this module is also read at build time (link previews), where it does not. */
+const BASE = typeof import.meta.env === "object" ? import.meta.env.BASE_URL : "/"
+const asset = (file: string) => `${BASE}assets/${file}`
 
 export const images = {
   logo: asset("77585.png"),
@@ -154,6 +156,9 @@ export const selectedRetreatIds = ["nature-connection", "galilee-yoga-retreat", 
 export const byIds = (ids: string[]) => ids.map((id) => events[id])
 
 export const eventHref = (id: string) => `#/event/${id}`
+
+/** Path of the static share page for an event (has its own link-preview tags; opens the event page). */
+export const sharePath = (id: string) => `e/${id}/`
 
 /** Compact badge text, e.g. "19 באפר׳ · 19:30"; null when the event has no valid date. */
 export function badgeLabel(e: SiteEvent): string | null {

@@ -1,5 +1,5 @@
 import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react"
-import { badgeLabel, eventHref, relatedEvents, splitLocation, type Host, type SiteEvent } from "./data"
+import { badgeLabel, eventHref, relatedEvents, sharePath, splitLocation, type Host, type SiteEvent } from "./data"
 import { formatEventDates } from "./dates"
 import { CalendarIcon, ChevronBackIcon, ChevronForwardIcon, MapPinIcon, ShareIcon, TagIcon } from "./icons"
 import { DateBadge, FavoriteButton, RegisterButton, SectionHeader, pressable } from "./ui"
@@ -134,7 +134,8 @@ export default function EventPage({ event, onBack }: { event: SiteEvent; onBack:
   }
 
   const share = async () => {
-    const url = window.location.href
+    // Share the event's static share page: unlike the #/event/ route, crawlers (WhatsApp, Facebook) can read its preview tags.
+    const url = new URL(`${import.meta.env.BASE_URL}${sharePath(event.id)}`, window.location.origin).href
     try {
       if (navigator.share) {
         await navigator.share({ title: event.title, url })
