@@ -18,6 +18,8 @@
   --color-ink-muted: #6b645c;
   --color-accent: #8c442d;
   --color-accent-pressed: #733724;
+  --color-olive: #61674e;
+  --color-olive-pressed: #4f543f;
   --color-hero: #292524;
   --color-header: #f8f2ec;
   --color-header-control: #f0e7de;
@@ -41,6 +43,9 @@
   --text-page-title: 36px;
   --text-page-title--line-height: 44px;
   --text-page-title--letter-spacing: -0.5px;
+  --text-display-lg: 40px;
+  --text-display-lg--line-height: 48px;
+  --text-display-lg--letter-spacing: -0.5px;
 
   /* Radius scale */
   --radius-control: 9999px;
