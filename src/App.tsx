@@ -6,6 +6,7 @@ import SideDrawer from "./SideDrawer"
 import {
   byIds,
   eventHref,
+  priceLabel,
   events,
   featuredIds,
   images,
@@ -14,7 +15,7 @@ import {
   type SiteEvent,
 } from "./data"
 import { BellIcon, ChevronDownIcon, ChevronForwardIcon, MapPinIcon, MenuIcon } from "./icons"
-import { DateBadge, FavoriteButton, MetaItem, RegisterButton, SectionHeader, pressable } from "./ui"
+import { DateBadge, FavoriteButton, MetaItem, PriceTag, RegisterButton, SectionHeader, pressable } from "./ui"
 
 const featuredRetreats = byIds(featuredIds)
 const eventCards = byIds(upcomingIds)
@@ -179,7 +180,7 @@ function FeaturedSlide({
       <div className="relative mt-1 text-meta text-white/90">
         <MetaItem icon={<MapPinIcon size={16} />}>{location}</MetaItem>
       </div>
-      <div className="relative mt-4 flex items-center gap-2">
+      <div className="relative mt-4 flex flex-wrap items-center gap-2">
         <RegisterButton event={event} variant="overlay" />
         <a
           className={`inline-flex h-10 shrink-0 items-center gap-1 rounded-control border border-white/50 bg-white/15 ps-4 pe-3 text-meta font-semibold text-white backdrop-blur-sm active:bg-white/25 ${pressable}`}
@@ -188,6 +189,7 @@ function FeaturedSlide({
           לפרטים
           <ChevronForwardIcon size={16} />
         </a>
+        <PriceTag className="ms-auto" event={event} tone="overlay" />
       </div>
     </article>
   )
@@ -301,8 +303,9 @@ function EventCard({ event }: { event: SiteEvent }) {
         </h3>
         <p className="mt-1 text-meta text-ink-muted">{location}</p>
         <div className="mt-auto pt-4">
-          <div className="border-t border-line pt-4">
-            <RegisterButton className="w-full" event={event} />
+          <div className="flex items-center gap-3 border-t border-line pt-4">
+            <PriceTag event={event} />
+            <RegisterButton className={priceLabel(event) ? "flex-1" : "w-full"} event={event} />
           </div>
         </div>
       </div>
@@ -344,7 +347,8 @@ function RetreatCard({ event }: { event: SiteEvent }) {
         <div className="mt-4 text-meta text-ink-muted">
           <MetaItem icon={<MapPinIcon size={16} />}>{location}</MetaItem>
         </div>
-        <div className="mt-auto pt-4">
+        <div className="mt-auto flex flex-wrap items-center gap-x-3 gap-y-2 pt-4">
+          <PriceTag event={event} />
           <RegisterButton event={event} />
         </div>
       </div>

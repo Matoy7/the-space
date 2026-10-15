@@ -1,8 +1,8 @@
 import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react"
-import { badgeLabel, eventHref, relatedEvents, sharePath, splitLocation, type Host, type SiteEvent } from "./data"
+import { badgeLabel, eventHref, priceLabel, relatedEvents, sharePath, splitLocation, type Host, type SiteEvent } from "./data"
 import { formatEventDates } from "./dates"
 import { CalendarIcon, ChevronBackIcon, ChevronForwardIcon, MapPinIcon, ShareIcon, TagIcon } from "./icons"
-import { DateBadge, FavoriteButton, RegisterButton, SectionHeader, pressable } from "./ui"
+import { DateBadge, FavoriteButton, PriceTag, RegisterButton, SectionHeader, pressable } from "./ui"
 
 /* Composition follows the approved reference (390px): 183px of photo above a sheet with 24px rounded corners,
    ~58px detail rows with 40px icon circles, a small-card rail, and a fixed registration bar. The reference is laid
@@ -40,6 +40,7 @@ function RelatedCard({ event, showArea }: { event: SiteEvent; showArea: boolean 
         {/* Inside "עוד ב<area>" the area is implied; the date is on the photo. */}
         {showArea && <p className="truncate text-meta text-ink-muted">{event.area}</p>}
         <div className="mt-auto pt-2">
+          <PriceTag className="mb-2 block" event={event} />
           <RegisterButton className="w-full" event={event} />
         </div>
       </div>
@@ -114,6 +115,8 @@ export default function EventPage({ event, onBack }: { event: SiteEvent; onBack:
   const location = splitLocation(event.location)
   const longDate = formatEventDates(event.dates, "long")
   const shortDate = badgeLabel(event)
+  // A fixed card price is used on the page too when no range is given.
+  const priceText = event.priceRange ?? priceLabel(event)
   const related = relatedEvents(event)
   const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(event.location)}`
 
@@ -187,7 +190,7 @@ export default function EventPage({ event, onBack }: { event: SiteEvent; onBack:
             primary={location.primary}
             secondary={location.secondary}
           />
-          {event.priceRange && <DetailRow icon={<TagIcon />} primary={event.priceRange} secondary="למשתתף" />}
+          {priceText && <DetailRow icon={<TagIcon />} primary={priceText} secondary="למשתתף" />}
         </ul>
 
         {event.about && <About text={event.about} />}
@@ -220,10 +223,10 @@ export default function EventPage({ event, onBack }: { event: SiteEvent; onBack:
 
       <div className="fixed inset-x-0 bottom-0 z-20 rounded-t-feature bg-surface px-4 py-4 pb-[calc(env(safe-area-inset-bottom)+16px)] shadow-[0_-4px_16px_-4px_rgba(45,38,30,0.12)]">
         <div className="flex items-center justify-between gap-4">
-          {event.priceRange ? (
+          {priceText ? (
             <div className="min-w-0">
               <p className="text-meta text-ink-muted">מחיר למשתתף</p>
-              <p className="text-heading font-bold text-ink">{event.priceRange}</p>
+              <p className="text-heading font-bold text-ink">{priceText}</p>
             </div>
           ) : shortDate ? (
             <div className="min-w-0">

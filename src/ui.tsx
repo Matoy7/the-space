@@ -1,5 +1,5 @@
 import type { ReactNode } from "react"
-import { badgeLabel, type SiteEvent } from "./data"
+import { badgeLabel, priceLabel, type SiteEvent } from "./data"
 import { useFavorite } from "./favorites"
 import { ChevronForwardIcon, HeartIcon } from "./icons"
 
@@ -183,5 +183,19 @@ export function RegisterButton({
     <button aria-label={`${label}: ${event.title}`} className={`${base} cursor-not-allowed ${muted}`} disabled type="button">
       {label}
     </button>
+  )
+}
+
+/** Fixed event price for the bottom of a card; renders nothing when the event has no price. */
+export function PriceTag({ event, tone = "card", className = "" }: { event: SiteEvent; tone?: "card" | "overlay"; className?: string }) {
+  const label = priceLabel(event)
+  if (!label) return null
+  return (
+    <span
+      aria-label={`מחיר: ${label}`}
+      className={`shrink-0 text-title font-bold whitespace-nowrap ${tone === "overlay" ? "text-white" : "text-ink"} ${className}`}
+    >
+      {label}
+    </span>
   )
 }

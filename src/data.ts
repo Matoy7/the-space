@@ -39,6 +39,8 @@ export type SiteEvent = {
   time?: string
   image: string
   /* The fields below have no data yet; the event page shows each section only when it is provided. */
+  /** Fixed price per participant in whole shekels (0 = free). Shown on every card when set. */
+  price?: number
   priceRange?: string
   about?: string
   host?: Host
@@ -159,6 +161,13 @@ export const eventHref = (id: string) => `#/event/${id}`
 
 /** Path of the static share page for an event (has its own link-preview tags; opens the event page). */
 export const sharePath = (id: string) => `e/${id}/`
+
+/** "₪120" (or "חינם" for 0); null when the event has no valid price, so nothing is shown. */
+export function priceLabel(e: SiteEvent): string | null {
+  const p = e.price
+  if (typeof p !== "number" || !Number.isFinite(p) || p < 0) return null
+  return p === 0 ? "חינם" : `₪${p.toLocaleString("en-US", { maximumFractionDigits: 2 })}`
+}
 
 /** Compact badge text, e.g. "19 באפר׳ · 19:30"; null when the event has no valid date. */
 export function badgeLabel(e: SiteEvent): string | null {
