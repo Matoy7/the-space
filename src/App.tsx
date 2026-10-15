@@ -1,7 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useState, type RefObject } from "react"
 import EventPage from "./EventPage"
 import FavoritesProvider from "./favorites"
-import LocationSheet from "./LocationSheet"
 import SideDrawer from "./SideDrawer"
 import {
   byIds,
@@ -14,7 +13,7 @@ import {
   upcomingIds,
   type SiteEvent,
 } from "./data"
-import { BellIcon, ChevronDownIcon, ChevronForwardIcon, MapPinIcon, MenuIcon } from "./icons"
+import { BellIcon, ChevronForwardIcon, MapPinIcon, MenuIcon } from "./icons"
 import { DateBadge, FavoriteButton, MetaItem, PriceTag, RegisterButton, SectionHeader, pressable } from "./ui"
 
 const featuredRetreats = byIds(featuredIds)
@@ -24,8 +23,6 @@ const selectedRetreats = byIds(selectedRetreatIds)
 const AUTOPLAY_MS = 2500
 const SWIPE_THRESHOLD_PX = 40
 
-/* Areas that appear in the site's events and retreats, north to south. No location-based filtering exists yet. */
-const locations = ["גליל עליון", "גליל מערבי", "תל אביב", "מדבר יהודה", "מצפה רמון"] as const
 
 /* Listed in reading order (right → left in RTL). */
 const categories = [
@@ -43,26 +40,17 @@ const categories = [
 const headerControl = `flex h-10 items-center justify-center rounded-control bg-header-control text-ink active:bg-line ${pressable}`
 
 function AppHeader({
-  location,
-  locationButtonRef,
-  locationOpen,
   menuButtonRef,
   menuOpen,
-  onOpenLocation,
   onOpenMenu,
 }: {
-  location: string
-  locationButtonRef: RefObject<HTMLButtonElement | null>
-  locationOpen: boolean
   menuButtonRef: RefObject<HTMLButtonElement | null>
   menuOpen: boolean
-  onOpenLocation: () => void
   onOpenMenu: () => void
 }) {
   return (
     <header className="sticky top-0 z-10 bg-header pt-[env(safe-area-inset-top)]">
-      <h1 className="sr-only">המרחב</h1>
-      {/* Equal 1fr side columns keep the location centred on the viewport, not just between the buttons. */}
+      {/* Equal 1fr side columns keep the logo centred on the viewport, not just between the buttons. */}
       <div className="grid h-14 grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2 px-4">
         <button
           aria-controls="site-drawer"
@@ -76,20 +64,10 @@ function AppHeader({
         >
           <MenuIcon />
         </button>
-        <button
-          aria-controls="location-sheet"
-          aria-expanded={locationOpen}
-          aria-haspopup="dialog"
-          aria-label={`מיקום: ${location}. החלפת אזור`}
-          className={`${headerControl} gap-2 justify-self-center ps-3 pe-2 text-meta font-semibold whitespace-nowrap`}
-          onClick={onOpenLocation}
-          ref={locationButtonRef}
-          type="button"
-        >
-          <MapPinIcon />
-          <span>{location}</span>
-          <ChevronDownIcon className="text-ink-muted" size={16} />
-        </button>
+        {/* Same logo asset and size as the footer. */}
+        <h1 className="justify-self-center">
+          <img alt="המרחב" className="h-10 w-auto" height={40} src={images.logo} width={121} />
+        </h1>
         <button aria-label="התראות" className={`${headerControl} w-10 justify-self-end`} type="button">
           <BellIcon />
         </button>
@@ -446,32 +424,12 @@ function useRoute() {
   return { route, goHome }
 }
 
-function HomePage({
-  category,
-  location,
-  setCategory,
-  setLocation,
-}: {
-  category: string
-  location: string
-  setCategory: (next: string) => void
-  setLocation: (next: string) => void
-}) {
+function HomePage({ category, setCategory }: { category: string; setCategory: (next: string) => void }) {
   const [menuOpen, setMenuOpen] = useState(false)
   const menuButtonRef = useRef<HTMLButtonElement>(null)
-  const [locationOpen, setLocationOpen] = useState(false)
-  const locationButtonRef = useRef<HTMLButtonElement>(null)
   return (
     <div className="min-h-full bg-canvas">
-      <AppHeader
-        location={location}
-        locationButtonRef={locationButtonRef}
-        locationOpen={locationOpen}
-        menuButtonRef={menuButtonRef}
-        menuOpen={menuOpen}
-        onOpenLocation={() => setLocationOpen(true)}
-        onOpenMenu={() => setMenuOpen(true)}
-      />
+      <AppHeader menuButtonRef={menuButtonRef} menuOpen={menuOpen} onOpenMenu={() => setMenuOpen(true)} />
       <main className="flex flex-col gap-8 pt-2 pb-8">
         <CategoryStrip onSelect={setCategory} selected={category} />
         <FeaturedCarousel />
@@ -480,32 +438,20 @@ function HomePage({
       </main>
       <SiteFooter />
       <SideDrawer onClose={() => setMenuOpen(false)} open={menuOpen} returnFocusTo={menuButtonRef} />
-      <LocationSheet
-        locations={locations}
-        onClose={() => setLocationOpen(false)}
-        onConfirm={(next) => {
-          setLocation(next)
-          setLocationOpen(false)
-        }}
-        open={locationOpen}
-        returnFocusTo={locationButtonRef}
-        selected={location}
-      />
     </div>
   )
 }
 
 function App() {
   const { route, goHome } = useRoute()
-  // Lives above the router so the chosen area survives a visit to an event page.
-  const [location, setLocation] = useState<string>("תל אביב")
+  // Lives above the router so the chosen category survives a visit to an event page.
   const [category, setCategory] = useState<string>(categories[0].name)
   return (
     <FavoritesProvider>
       {route.name === "event" ? (
         <EventPage event={events[route.id]} key={route.id} onBack={goHome} />
       ) : (
-        <HomePage category={category} location={location} setCategory={setCategory} setLocation={setLocation} />
+        <HomePage category={category} setCategory={setCategory} />
       )}
     </FavoritesProvider>
   )
