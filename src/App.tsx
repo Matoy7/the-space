@@ -377,6 +377,9 @@ function EventCard({ date, image, location, title }: (typeof eventCards)[number]
   )
 }
 
+/* Horizontal card rail (events, retreats): native RTL scrolling with snap; the next card peeks in. */
+const cardRail = "flex snap-x snap-mandatory gap-4 overflow-x-auto overscroll-x-contain scroll-px-4 px-4 pb-2"
+
 /* Sticky header (56px) + 8px breathing room when jumping to a section via an anchor. */
 const anchorOffset = "scroll-mt-[calc(env(safe-area-inset-top)+64px)]"
 
@@ -384,7 +387,7 @@ function UpcomingEvents() {
   return (
     <section className={`flex flex-col gap-4 ${anchorOffset}`} id="events">
       <SectionHeader title="אירועים קרובים" />
-      <div className="flex snap-x snap-mandatory gap-4 overflow-x-auto scroll-px-4 px-4 pb-2">
+      <div className={cardRail}>
         {eventCards.map((card) => (
           <EventCard {...card} key={card.title} />
         ))}
@@ -393,27 +396,62 @@ function UpcomingEvents() {
   )
 }
 
+/* Card order is preserved: the original card first, then retreats already listed in the app's events. */
+const selectedRetreats = [
+  {
+    title: "חיבור לטבע",
+    description: "ריטריט יוגה וסדנאות בטבע",
+    location: "גליל עליון",
+    date: "25-23 במאי",
+    image: imgNature,
+  },
+  {
+    title: "ריטריט יוגה בגליל",
+    description: "ריטריט יוגה בנוף הגליל",
+    location: "גליל עליון",
+    date: "16-16 בנובמבר",
+    image: imgGalilee,
+  },
+  {
+    title: "ויפאסנה במדבר",
+    description: "ריטריט מדיטציית ויפאסנה",
+    location: "מדבר יהודה",
+    date: "2-4 בנובמבר",
+    image: imgDesert,
+  },
+]
+
+function RetreatCard({ date, description, image, location, title }: (typeof selectedRetreats)[number]) {
+  return (
+    <article className="flex w-[82vw] max-w-[340px] shrink-0 overflow-hidden rounded-card border border-line/60 bg-surface shadow-card">
+      <div className="flex min-w-0 flex-1 flex-col p-4">
+        <h3 className="text-title font-bold text-ink">{title}</h3>
+        <p className="mt-1 text-meta text-ink-muted">{description}</p>
+        <div className="mt-4 flex flex-col gap-2 text-meta text-ink-muted">
+          <MetaItem icon={<MapPinIcon size={16} />}>{location}</MetaItem>
+          <MetaItem icon={<CalendarIcon size={16} />}>{date}</MetaItem>
+        </div>
+        <div className="mt-auto pt-4">
+          <PrimaryButton>לפרטים</PrimaryButton>
+        </div>
+      </div>
+      <div className="w-[42%] shrink-0 bg-sand">
+        <img alt="" className="size-full object-cover" draggable={false} src={image} />
+      </div>
+    </article>
+  )
+}
+
 function FeaturedRetreats() {
   return (
     <section className={`flex flex-col gap-4 ${anchorOffset}`} id="retreats">
       <SectionHeader title="ריטריטים נבחרים" />
-      <div className="px-4">
-        <article className="flex overflow-hidden rounded-card border border-line/60 bg-surface shadow-card">
-          <div className="flex min-w-0 flex-1 flex-col p-4">
-            <h3 className="text-title font-bold text-ink">חיבור לטבע</h3>
-            <p className="mt-1 text-meta text-ink-muted">ריטריט יוגה וסדנאות בטבע</p>
-            <div className="mt-4 flex flex-col gap-2 text-meta text-ink-muted">
-              <MetaItem icon={<MapPinIcon size={16} />}>גליל עליון</MetaItem>
-              <MetaItem icon={<CalendarIcon size={16} />}>25-23 במאי</MetaItem>
-            </div>
-            <div className="mt-4">
-              <PrimaryButton>לפרטים</PrimaryButton>
-            </div>
+      <div aria-label="ריטריטים נבחרים" className={cardRail} role="list">
+        {selectedRetreats.map((retreat) => (
+          <div className="flex shrink-0 snap-start" key={retreat.title} role="listitem">
+            <RetreatCard {...retreat} />
           </div>
-          <div className="w-[42%] shrink-0 bg-sand">
-            <img alt="" className="size-full object-cover" src={imgNature} />
-          </div>
-        </article>
+        ))}
       </div>
     </section>
   )
