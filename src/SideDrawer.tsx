@@ -6,11 +6,13 @@ const logoSrc = `${import.meta.env.BASE_URL}assets/77585.png`
 
 type NavItem = { label: string; target?: string }
 
-/* Primary navigation. Items without a target have no destination on the site yet and render as "בקרוב". */
+/* Primary navigation: a home section id or a page route ("#/…"). Items without a target have no destination on the
+   site yet and render as "בקרוב". */
 const primaryNav: NavItem[] = [
   { label: "אירועים וסדנאות", target: "events" },
   { label: "תרגולים שבועיים" },
   { label: "ריטריטים", target: "retreats" },
+  { label: "מדריכים ומנחים", target: "#/hosts" },
 ]
 
 function ComingSoon() {
@@ -35,7 +37,7 @@ export default function SideDrawer({
   onClose: () => void
   returnFocusTo: React.RefObject<HTMLElement | null>
   /** Page currently shown, for the active state of page links. */
-  current?: "home" | "about" | "contact" | "listing" | "host"
+  current?: "home" | "about" | "contact" | "listing" | "host" | "hosts"
 }) {
   const titleId = useId()
   const panelRef = useRef<HTMLDivElement>(null)
@@ -131,7 +133,7 @@ export default function SideDrawer({
                 {item.target ? (
                   <a
                     className="flex h-14 items-center text-heading font-semibold text-ink transition-colors active:text-accent"
-                    href={`#${item.target}`}
+                    href={item.target.startsWith("#/") ? item.target : `#${item.target}`}
                     onClick={(e) => navigate(e, item.target!)}
                   >
                     {item.label}

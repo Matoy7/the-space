@@ -35,6 +35,8 @@ export type Host = {
   website?: string
   /** International number, digits only (e.g. "972501234567"). */
   whatsapp?: string
+  /** Explicit areas of expertise (labels from `expertiseTags`); derived from the data when not set. */
+  expertise?: ExpertiseTag[]
 }
 
 export type SiteEvent = {
@@ -258,3 +260,35 @@ export function relatedEvents(current: SiteEvent): { sameArea: boolean; items: S
   const same = others.filter((e) => e.area === current.area)
   return same.length > 0 ? { sameArea: true, items: same } : { sameArea: false, items: others }
 }
+
+/* ---------- Instructor expertise (directory) ---------- */
+
+/** Expertise labels the directory can filter by, in display order. */
+export const expertiseTags = ["יוגה", "מדיטציה", "נשימה", "תנועה", "סדנאות", "ריטריטים"] as const
+export type ExpertiseTag = (typeof expertiseTags)[number]
+
+/** Words in an instructor's own description or their activities' names that state each area. */
+const expertiseWords: Record<ExpertiseTag, RegExp> = {
+  יוגה: /יוגה/,
+  מדיטציה: /מדיטצי|ויפאסנה/,
+  נשימה: /נשימ/,
+  תנועה: /תנועה/,
+  סדנאות: /סדנ/,
+  ריטריטים: /ריטריט/,
+}
+
+/**
+ * An instructor's areas of expertise: the explicit `expertise` when given; otherwise only what the data states —
+ * their professional line (bio) and their activities' titles / subtitles, plus "ריטריטים" when they run one of the
+ * site's retreats.
+ */
+export function hostExpertise(host: Host): ExpertiseTag[] {
+  if (host.expertise) return expertiseTags.filter((t) => host.expertise!.includes(t))
+  const activities = eventsByHost(host.id)
+  const text = [host.bio ?? "", ...activities.flatMap((e) => [e.title, e.subtitle ?? ""])].join(" ")
+  return expertiseTags.filter(
+    (t) => expertiseWords[t].test(text) || (t === "ריטריטים" && activities.some((e) => retreatIds.has(e.id))),
+  )
+}
+
+export const hostsHref = "#/hosts"

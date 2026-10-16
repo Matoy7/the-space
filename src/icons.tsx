@@ -101,3 +101,10 @@ export const WhatsAppIcon = createIcon(
     <path d="M9.2 8.6c.2-.4.5-.5.8-.4l.5.1.8 1.8-.6.8a5.6 5.6 0 0 0 2.6 2.6l.8-.6 1.8.8.1.5c.1.3 0 .6-.4.8-.7.5-1.6.6-2.4.3a8.2 8.2 0 0 1-4.3-4.3c-.3-.8-.2-1.7.3-2.4Z" />
   </>,
 )
+
+export const SearchIcon = createIcon(
+  <>
+    <circle cx="11" cy="11" r="6.5" />
+    <path d="m16 16 4 4" />
+  </>,
+)
