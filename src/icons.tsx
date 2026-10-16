@@ -75,3 +75,26 @@ export const TagIcon = createIcon(
     <circle cx="8.5" cy="8.5" r="1.5" />
   </>,
 )
+
+/* Contact icons (instructor profile). */
+export const InstagramIcon = createIcon(
+  <>
+    <rect height="16" rx="4.5" width="16" x="4" y="4" />
+    <circle cx="12" cy="12" r="3.5" />
+    <circle cx="16.75" cy="7.25" fill="currentColor" r="0.75" stroke="none" />
+  </>,
+)
+
+export const GlobeIcon = createIcon(
+  <>
+    <circle cx="12" cy="12" r="8.5" />
+    <path d="M3.5 12h17M12 3.5c2.3 2.4 3.5 5.2 3.5 8.5s-1.2 6.1-3.5 8.5c-2.3-2.4-3.5-5.2-3.5-8.5s1.2-6.1 3.5-8.5Z" />
+  </>,
+)
+
+export const WhatsAppIcon = createIcon(
+  <>
+    <path d="M4.5 19.5 5.6 16A8 8 0 1 1 8.4 18.6L4.5 19.5Z" />
+    <path d="M9.2 8.6c.2-.4.5-.5.8-.4l.5.1.8 1.8-.6.8a5.6 5.6 0 0 0 2.6 2.6l.8-.6 1.8.8.1.5c.1.3 0 .6-.4.8-.7.5-1.6.6-2.4.3a8.2 8.2 0 0 1-4.3-4.3c-.3-.8-.2-1.7.3-2.4Z" />
+  </>,
+)

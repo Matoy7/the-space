@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react"
 import EventCard from "./EventCard"
-import { listings, type ListingId } from "./data"
+import { listings, type ListingId, type SiteEvent } from "./data"
 import { defaultFilters, useFiltered, useFilters } from "./filters"
 import { ChevronBackIcon } from "./icons"
 import { pressable } from "./ui"
@@ -12,8 +12,30 @@ const PAGE_SIZE = 10
    filters), each batch appended below. Reached at "#/events" / "#/retreats". */
 export default function ListingPage({ id, onBack }: { id: ListingId; onBack: () => void }) {
   const { title, emptyText, items } = listings[id]
-  const { active, setFilters } = useFilters()
-  const all = useFiltered(useMemo(items, [items]))
+  return <EventListPage emptyText={emptyText} filtered items={useMemo(items, [items])} onBack={onBack} title={title} />
+}
+
+/**
+ * Shared vertical event list page (category listings, an instructor's activities).
+ * `filtered`: apply the site filters (category listings); an instructor's own list is always complete.
+ */
+export function EventListPage({
+  title,
+  emptyText,
+  items,
+  filtered = false,
+  onBack,
+}: {
+  title: string
+  emptyText: string
+  items: SiteEvent[]
+  filtered?: boolean
+  onBack: () => void
+}) {
+  const filters = useFilters()
+  const filteredItems = useFiltered(items)
+  const all = filtered ? filteredItems : items
+  const active = filtered && filters.active
   const [visible, setVisible] = useState(PAGE_SIZE)
 
   useEffect(() => {
@@ -44,7 +66,7 @@ export default function ListingPage({ id, onBack }: { id: ListingId; onBack: () 
           {active && (
             <button
               className={`h-10 rounded-control bg-header-control px-4 text-meta font-semibold text-ink active:bg-line ${pressable}`}
-              onClick={() => setFilters(defaultFilters)}
+              onClick={() => filters.setFilters(defaultFilters)}
               type="button"
             >
               ניקוי הכל

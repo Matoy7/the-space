@@ -1,14 +1,17 @@
 import { useEffect, useLayoutEffect, useRef, useState, type ReactNode, type RefObject } from "react"
 import AboutPage from "./AboutPage"
 import EventCard from "./EventCard"
-import ListingPage from "./ListingPage"
+import HostPage from "./HostPage"
+import ListingPage, { EventListPage } from "./ListingPage"
 import ContactPage from "./ContactPage"
 import EventPage from "./EventPage"
 import FilterSheet, { type FilterKind } from "./FilterSheet"
-import { FilterProvider, describe, useFiltered, useFilters } from "./filters"
+import { FilterProvider, byNextDate, describe, useFiltered, useFilters } from "./filters"
 import SideDrawer from "./SideDrawer"
 import {
   byIds,
+  eventsByHost,
+  hosts,
   listingHref,
   listings,
   type ListingId,
@@ -364,19 +367,24 @@ function SiteFooter() {
 }
 
 /* Hash routes keep deep links working on GitHub Pages: "#/event/<id>" is an event page, "#/events" and "#/retreats"
-   are full listings ("הצג הכל"), "#/about" and "#/contact" are pages; any other hash is the home page. */
+   are full listings ("הצג הכל"), "#/host/<id>" is an instructor profile and "#/host/<id>/events" their activities,
+   "#/about" and "#/contact" are pages; any other hash is the home page. */
 type Route =
   | { name: "home" }
   | { name: "about" }
   | { name: "contact" }
   | { name: "event"; id: string }
   | { name: "listing"; id: ListingId }
+  | { name: "host"; id: string }
+  | { name: "hostEvents"; id: string }
 
 function parseRoute(hash: string): Route {
   if (hash === "#/about") return { name: "about" }
   if (hash === "#/contact") return { name: "contact" }
   const listing = hash.slice(2)
   if (hash.startsWith("#/") && Object.prototype.hasOwnProperty.call(listings, listing)) return { name: "listing", id: listing as ListingId }
+  const host = hash.match(/^#\/host\/([\w-]+)(\/events)?$/)
+  if (host && hosts[host[1]]) return { name: host[2] ? "hostEvents" : "host", id: host[1] }
   const match = hash.match(/^#\/event\/([\w-]+)$/)
   return match && events[match[1]] ? { name: "event", id: match[1] } : { name: "home" }
 }
@@ -433,7 +441,13 @@ function useRoute() {
 }
 
 /** Shared page chrome: the site header (logo, menu, bell) and its side menu. */
-function SiteShell({ current, children }: { current: "home" | "about" | "contact" | "listing"; children: ReactNode }) {
+function SiteShell({
+  current,
+  children,
+}: {
+  current: "home" | "about" | "contact" | "listing" | "host"
+  children: ReactNode
+}) {
   const [menuOpen, setMenuOpen] = useState(false)
   const menuButtonRef = useRef<HTMLButtonElement>(null)
   return (
@@ -469,6 +483,20 @@ function App() {
     <FilterProvider>
       {route.name === "event" ? (
         <EventPage event={events[route.id]} key={route.id} onBack={goBack} />
+      ) : route.name === "host" ? (
+        <SiteShell current="host">
+          <HostPage host={hosts[route.id]} key={route.id} />
+        </SiteShell>
+      ) : route.name === "hostEvents" ? (
+        <SiteShell current="host">
+          <EventListPage
+            emptyText="אין כרגע אירועים"
+            items={byNextDate(eventsByHost(route.id))}
+            key={route.id}
+            onBack={goBack}
+            title={`האירועים של ${hosts[route.id].name}`}
+          />
+        </SiteShell>
       ) : route.name === "listing" ? (
         <SiteShell current="listing">
           <ListingPage id={route.id} key={route.id} onBack={goBack} />

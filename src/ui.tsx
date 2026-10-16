@@ -9,15 +9,20 @@ export function SectionHeader({
   actionHref,
   actionLabel = "הצג הכל",
   className = "px-4",
+  id,
 }: {
   title: string
   actionHref: string
   actionLabel?: string
   className?: string
+  /** For aria-labelledby on the enclosing section. */
+  id?: string
 }) {
   return (
     <header className={`flex items-center justify-between gap-4 ${className}`}>
-      <h2 className="text-heading font-bold text-ink">{title}</h2>
+      <h2 className="text-heading font-bold text-ink" id={id}>
+        {title}
+      </h2>
       <a
         className="-me-2 inline-flex h-10 shrink-0 items-center gap-1 rounded-control px-2 text-meta font-semibold text-accent transition-colors active:bg-sand"
         href={actionHref}

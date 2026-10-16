@@ -1,5 +1,5 @@
 import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react"
-import { badgeLabel, listingHref, priceLabel, relatedEvents, sharePath, splitLocation, type Host, type SiteEvent } from "./data"
+import { badgeLabel, hostHref, listingHref, priceLabel, relatedEvents, sharePath, splitLocation, type Host, type SiteEvent } from "./data"
 import { formatEventDates } from "./dates"
 import { CalendarIcon, ChevronBackIcon, ChevronForwardIcon, MapPinIcon, ShareIcon, TagIcon } from "./icons"
 import EventCard from "./EventCard"
@@ -65,23 +65,30 @@ function About({ text }: { text: string }) {
 
 function HostRow({ host }: { host: Host }) {
   return (
-    <section aria-label="מדריך האירוע" className="flex items-center gap-4 border-t border-ink/10 py-6">
-      {host.photo ? (
-        <img alt="" className="size-14 shrink-0 rounded-full object-cover" src={host.photo} />
-      ) : (
-        <span
-          aria-hidden="true"
-          className="flex size-14 shrink-0 items-center justify-center rounded-full bg-header-control text-heading font-bold text-ink"
-        >
-          {host.name.trim().charAt(0)}
-        </span>
-      )}
-      <div className="min-w-0 flex-1">
-        <h2 className="text-body font-bold text-ink">
-          {host.role}: {host.name}
-        </h2>
-        {host.bio && <p className="text-meta text-ink-muted">{host.bio}</p>}
-      </div>
+    <section aria-label="מדריך האירוע" className="border-t border-ink/10 py-4">
+      {/* The whole row opens the instructor's profile. */}
+      <a
+        className="-mx-2 flex items-center gap-4 rounded-card px-2 py-2 transition-colors active:bg-sand"
+        href={hostHref(host.id)}
+      >
+        {host.photo ? (
+          <img alt="" className="size-14 shrink-0 rounded-full object-cover" src={host.photo} />
+        ) : (
+          <span
+            aria-hidden="true"
+            className="flex size-14 shrink-0 items-center justify-center rounded-full bg-header-control text-heading font-bold text-ink"
+          >
+            {host.name.trim().charAt(0)}
+          </span>
+        )}
+        <div className="min-w-0 flex-1">
+          <h2 className="text-body font-bold text-ink">
+            {host.role}: {host.name}
+          </h2>
+          {host.bio && <p className="text-meta text-ink-muted">{host.bio}</p>}
+        </div>
+        <ChevronForwardIcon className="text-ink-muted" />
+      </a>
     </section>
   )
 }

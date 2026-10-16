@@ -133,6 +133,12 @@ function dateWindow(f: Filters, now: Date): [number, number] | null {
   }
 }
 
+/** `items` ordered by their next occurrence (soonest first); undated events go last, in their original order. */
+export function byNextDate(items: SiteEvent[], now = new Date()): SiteEvent[] {
+  const first = (e: SiteEvent) => eventDays(e, now)?.[0] ?? Number.POSITIVE_INFINITY
+  return [...items].sort((a, b) => first(a) - first(b))
+}
+
 /* ---------- Matching ---------- */
 
 /** One predicate for every collection on the site (home sections, listings, related events). */
