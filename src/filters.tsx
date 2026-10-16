@@ -50,14 +50,35 @@ export type Filters = {
 
 export const defaultFilters: Filters = { region: "all", date: null, from: "", to: "", freeOnly: false, maxPrice: PRICE_MAX }
 
-/** True when the filters restrict anything (drives the dot on the filter button). */
+const shortDate = (iso: string) => {
+  const [, m, d] = iso.split("-")
+  return `${Number(d)}.${Number(m)}`
+}
+
+/** Per-filter state for the home chips: whether it restricts anything, and the label (filter name until set). */
+export function describe(f: Filters) {
+  const region = regions.find((r) => r.id === f.region)!
+  const dateActive = f.date !== null && (f.date !== "custom" || f.from !== "")
+  const dateLabel = !dateActive
+    ? "תאריך"
+    : f.date === "custom"
+      ? f.to && f.to !== f.from
+        ? `${shortDate(f.from)}-${shortDate(f.to)}`
+        : shortDate(f.from)
+      : dateOptions.find((o) => o.id === f.date)!.label
+  const priceActive = f.freeOnly || f.maxPrice < PRICE_MAX
+  const priceLabel = f.freeOnly ? "בחינם בלבד" : priceActive ? `עד ₪${f.maxPrice.toLocaleString("en-US")}` : "מחיר"
+  return {
+    location: { active: f.region !== "all", label: f.region === "all" ? "מיקום" : region.label },
+    date: { active: dateActive, label: dateLabel },
+    price: { active: priceActive, label: priceLabel },
+  }
+}
+
+/** True when the filters restrict anything. */
 export function isActive(f: Filters): boolean {
-  return (
-    f.region !== "all" ||
-    (f.date !== null && (f.date !== "custom" || f.from !== "")) ||
-    f.freeOnly ||
-    f.maxPrice < PRICE_MAX
-  )
+  const d = describe(f)
+  return d.location.active || d.date.active || d.price.active
 }
 
 /* ---------- Dates (whole days, local calendar) ---------- */

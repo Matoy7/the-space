@@ -4,8 +4,8 @@ import EventCard from "./EventCard"
 import ListingPage from "./ListingPage"
 import ContactPage from "./ContactPage"
 import EventPage from "./EventPage"
-import FilterSheet from "./FilterSheet"
-import { FilterProvider, useFiltered, useFilters } from "./filters"
+import FilterSheet, { type FilterKind } from "./FilterSheet"
+import { FilterProvider, describe, useFiltered, useFilters } from "./filters"
 import SideDrawer from "./SideDrawer"
 import {
   byIds,
@@ -19,7 +19,7 @@ import {
   upcomingIds,
   type SiteEvent,
 } from "./data"
-import { BellIcon, FilterIcon, MenuIcon } from "./icons"
+import { BellIcon, CalendarIcon, MenuIcon, MapPinIcon, TagIcon } from "./icons"
 import { SectionHeader, pressable } from "./ui"
 
 const featuredRetreats = byIds(featuredIds)
@@ -273,30 +273,47 @@ function NoResults() {
   )
 }
 
-/** Icon-only trigger for the filter sheet; a dot marks applied filters. */
-function FilterRow() {
-  const { active } = useFilters()
-  const [open, setOpen] = useState(false)
-  const buttonRef = useRef<HTMLButtonElement>(null)
+const filterChips = [
+  { kind: "location", Icon: MapPinIcon, name: "מיקום" },
+  { kind: "date", Icon: CalendarIcon, name: "תאריך" },
+  { kind: "price", Icon: TagIcon, name: "מחיר" },
+] as const
+
+/** One chip per filter (location, date, price); each shows its current value and opens its own sheet. */
+function FilterChips() {
+  const { filters } = useFilters()
+  const state = describe(filters)
+  const [open, setOpen] = useState<FilterKind | null>(null)
+  const lastChip = useRef<HTMLButtonElement | null>(null)
   return (
     // -my-4 trims the page's 32px section gap to 16px on each side of this compact row.
-    <div className="-my-4 flex px-4">
-      <button
-        aria-controls="filter-sheet"
-        aria-expanded={open}
-        aria-haspopup="dialog"
-        aria-label={active ? "סינון תוצאות (פעיל)" : "סינון תוצאות"}
-        className={`${headerControl} relative w-10`}
-        onClick={() => setOpen(true)}
-        ref={buttonRef}
-        type="button"
-      >
-        <FilterIcon />
-        {active && (
-          <span aria-hidden="true" className="absolute end-1.5 top-1.5 size-2 rounded-full bg-accent ring-2 ring-header-control" />
-        )}
-      </button>
-      <FilterSheet onClose={() => setOpen(false)} open={open} returnFocusTo={buttonRef} />
+    <div className="-my-4">
+      <ul aria-label="סינון" className="flex gap-2 overflow-x-auto overscroll-x-contain px-4">
+        {filterChips.map(({ kind, Icon, name }) => {
+          const { active, label } = state[kind]
+          return (
+            <li className="shrink-0" key={kind}>
+              <button
+                aria-expanded={open === kind}
+                aria-haspopup="dialog"
+                aria-label={active ? `${name}: ${label}` : name}
+                className={`flex h-10 items-center gap-2 rounded-control border px-3 text-meta font-medium whitespace-nowrap ${pressable} ${
+                  active ? "border-olive bg-olive-soft text-olive-ink" : "border-line bg-surface text-ink active:bg-sand"
+                }`}
+                onClick={(e) => {
+                  lastChip.current = e.currentTarget
+                  setOpen(kind)
+                }}
+                type="button"
+              >
+                <Icon className={active ? "text-olive" : "text-ink-muted"} size={16} />
+                {label}
+              </button>
+            </li>
+          )
+        })}
+      </ul>
+      <FilterSheet kind={open} onClose={() => setOpen(null)} returnFocusTo={lastChip} />
     </div>
   )
 }
@@ -434,7 +451,7 @@ function HomePage({ category, setCategory }: { category: string; setCategory: (n
     <SiteShell current="home">
       <main className="flex flex-col gap-8 pt-2 pb-8">
         <CategoryStrip onSelect={setCategory} selected={category} />
-        <FilterRow />
+        <FilterChips />
         {slides.length > 0 && <FeaturedCarousel key={slides.map((e) => e.id).join()} slides={slides} />}
         <UpcomingEvents />
         <FeaturedRetreats />

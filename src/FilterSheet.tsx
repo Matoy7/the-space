@@ -1,4 +1,4 @@
-import { useId, useLayoutEffect, useRef, useState, type ReactNode, type RefObject } from "react"
+import { useId, useLayoutEffect, useRef, useState, type RefObject } from "react"
 import {
   dateOptions,
   defaultFilters,
@@ -25,30 +25,28 @@ const isoToday = () => {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`
 }
 
-function Section({ title, id, children }: { title: string; id: string; children: ReactNode }) {
-  return (
-    <section aria-labelledby={id} className="border-t border-line pt-6 first:border-t-0 first:pt-0">
-      <h3 className="text-title font-semibold text-ink" id={id}>
-        {title}
-      </h3>
-      <div className="mt-4">{children}</div>
-    </section>
-  )
-}
+export type FilterKind = "location" | "date" | "price"
+
+const titles: Record<FilterKind, string> = { location: "מיקום", date: "תאריך", price: "מחיר" }
 
 /**
- * Location, date and price for every event and retreat collection on the site.
+ * One filter (location, date or price) for every event and retreat collection on the site.
  * Choices are a draft until "הצגת התוצאות"; closing any other way keeps the applied filters.
  */
 export default function FilterSheet({
-  open,
+  kind,
   onClose,
   returnFocusTo,
 }: {
-  open: boolean
+  /** The filter shown; null = closed. */
+  kind: FilterKind | null
   onClose: () => void
   returnFocusTo: RefObject<HTMLElement | null>
 }) {
+  const open = kind !== null
+  // Keep the last filter's content while the sheet slides out.
+  const [shown, setShown] = useState<FilterKind>("location")
+  if (kind && kind !== shown) setShown(kind)
   const { filters, setFilters } = useFilters()
   const [draft, setDraft] = useState<Filters>(filters)
   const [dragY, setDragY] = useState(0)
@@ -68,6 +66,16 @@ export default function FilterSheet({
   }, [open, filters])
 
   const update = (patch: Partial<Filters>) => setDraft((d) => ({ ...d, ...patch }))
+
+  /** Resets only this sheet's filter. */
+  const clear = () =>
+    update(
+      shown === "location"
+        ? { region: defaultFilters.region }
+        : shown === "date"
+          ? { date: null, from: "", to: "" }
+          : { freeOnly: false, maxPrice: PRICE_MAX },
+    )
 
   const apply = () => {
     setFilters(draft)
@@ -126,7 +134,7 @@ export default function FilterSheet({
       <div
         aria-labelledby={`${id}-title`}
         aria-modal="true"
-        className={`absolute inset-x-0 bottom-0 flex h-[75dvh] max-h-[calc(100dvh-env(safe-area-inset-top)-24px)] min-h-[min(480px,calc(100dvh-24px))] flex-col rounded-t-feature bg-surface shadow-card ${
+        className={`absolute inset-x-0 bottom-0 flex max-h-[min(80dvh,calc(100dvh-env(safe-area-inset-top)-24px))] flex-col rounded-t-feature bg-surface shadow-card ${
           dragging ? "" : "transition-transform duration-300 ease-out motion-reduce:transition-none"
         }`}
         id="filter-sheet"
@@ -144,7 +152,7 @@ export default function FilterSheet({
           <span aria-hidden="true" className="mx-auto block h-1 w-10 rounded-full bg-ink/15" />
           <div className="mt-2 flex items-center justify-between gap-4">
             <h2 className="text-heading font-bold text-ink" id={`${id}-title`}>
-              התאמת תוצאות
+              {titles[shown]}
             </h2>
             <button
               aria-label="סגירה"
@@ -158,9 +166,9 @@ export default function FilterSheet({
           </div>
         </div>
 
-        <div className="flex min-h-0 flex-1 flex-col gap-6 overflow-y-auto overscroll-contain px-6 pb-6">
-          <Section id={`${id}-loc`} title="מיקום">
-            <div aria-labelledby={`${id}-loc`} className="flex flex-wrap gap-2" role="radiogroup">
+        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-6 pb-6">
+          {shown === "location" && (
+            <div aria-labelledby={`${id}-title`} className="flex flex-wrap gap-2" role="radiogroup">
               {regions.map((r) => (
                 <button
                   aria-checked={draft.region === r.id}
@@ -174,10 +182,10 @@ export default function FilterSheet({
                 </button>
               ))}
             </div>
-          </Section>
-
-          <Section id={`${id}-date`} title="תאריך">
-            <div aria-labelledby={`${id}-date`} className="flex flex-wrap gap-2" role="group">
+          )}
+          {shown === "date" && (
+            <>
+            <div aria-labelledby={`${id}-title`} className="flex flex-wrap gap-2" role="group">
               {dateOptions.map((o) => (
                 <button
                   aria-pressed={draft.date === o.id}
@@ -215,9 +223,10 @@ export default function FilterSheet({
                 </label>
               </div>
             )}
-          </Section>
-
-          <Section id={`${id}-price`} title="מחיר">
+            </>
+          )}
+          {shown === "price" && (
+            <>
             <label className="flex min-h-12 items-center justify-between gap-4">
               <span className="text-body text-ink">פעילויות בחינם בלבד</span>
               <input
@@ -259,16 +268,17 @@ export default function FilterSheet({
                 <span>₪1,000+</span>
               </div>
             </div>
-          </Section>
+            </>
+          )}
         </div>
 
         <div className="flex shrink-0 items-center gap-4 border-t border-line px-6 pt-4 pb-[calc(env(safe-area-inset-bottom)+16px)]">
           <button
             className="h-12 shrink-0 rounded-control px-2 text-body font-semibold text-ink underline-offset-4 active:text-accent"
-            onClick={() => setDraft(defaultFilters)}
+            onClick={clear}
             type="button"
           >
-            ניקוי הכל
+            ניקוי
           </button>
           <button
             className={`flex h-12 flex-1 items-center justify-center rounded-control bg-accent text-body font-semibold text-white active:bg-accent-pressed ${pressable}`}
