@@ -1,15 +1,16 @@
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
+import FilterSheet from "./FilterSheet"
 import EventCard from "./EventCard"
 import { listings, type ListingId, type SiteEvent } from "./data"
 import { defaultFilters, useFiltered, useFilters } from "./filters"
-import { ChevronBackIcon } from "./icons"
+import { ChevronBackIcon, FilterIcon } from "./icons"
 import { pressable } from "./ui"
 
 /** Items rendered per step; "הצגת עוד" adds the next batch, so long collections never render all at once. */
 const PAGE_SIZE = 10
 
-/* Full vertical listing behind a section's "הצג הכל": one column of the shared event cards (narrowed by the site
-   filters), each batch appended below. Reached at "#/events" / "#/retreats". */
+/* Full vertical listing behind a section's "הצג הכל": one column of the shared event cards, each batch appended
+   below, with the location / date / price filter (the only place the site filters live). "#/events", "#/retreats". */
 export default function ListingPage({ id, onBack }: { id: ListingId; onBack: () => void }) {
   const { title, emptyText, items } = listings[id]
   return <EventListPage emptyText={emptyText} filtered items={useMemo(items, [items])} onBack={onBack} title={title} />
@@ -37,6 +38,8 @@ export function EventListPage({
   const all = filtered ? filteredItems : items
   const active = filtered && filters.active
   const [visible, setVisible] = useState(PAGE_SIZE)
+  const [sheetOpen, setSheetOpen] = useState(false)
+  const filterButton = useRef<HTMLButtonElement>(null)
 
   useEffect(() => {
     const previous = document.title
@@ -57,8 +60,30 @@ export function EventListPage({
         >
           <ChevronBackIcon />
         </button>
-        <h1 className="text-display font-bold text-ink">{title}</h1>
+        <h1 className="min-w-0 flex-1 text-display font-bold text-ink">{title}</h1>
+        {filtered && (
+          // Icon-only trigger for the location / date / price sheet; a dot marks applied filters.
+          <button
+            aria-controls="filter-sheet"
+            aria-expanded={sheetOpen}
+            aria-haspopup="dialog"
+            aria-label={active ? "סינון תוצאות (פעיל)" : "סינון תוצאות"}
+            className={`relative flex size-10 shrink-0 items-center justify-center rounded-control bg-header-control text-ink active:bg-line ${pressable}`}
+            onClick={() => setSheetOpen(true)}
+            ref={filterButton}
+            type="button"
+          >
+            <FilterIcon />
+            {active && (
+              <span
+                aria-hidden="true"
+                className="absolute end-1.5 top-1.5 size-2 rounded-full bg-accent ring-2 ring-header-control"
+              />
+            )}
+          </button>
+        )}
       </div>
+      {filtered && <FilterSheet onClose={() => setSheetOpen(false)} open={sheetOpen} returnFocusTo={filterButton} />}
 
       {all.length === 0 ? (
         <div className="mt-8 flex flex-col items-center gap-4 rounded-card bg-surface px-4 py-8 text-center">

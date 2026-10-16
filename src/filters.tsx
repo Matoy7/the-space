@@ -1,6 +1,6 @@
 import { createContext, useContext, useMemo, useState, type ReactNode } from "react"
 import { normaliseDates } from "./dates"
-import type { SiteEvent } from "./data"
+import { listings, type SiteEvent } from "./data"
 
 /* ---------- Model ---------- */
 
@@ -22,6 +22,30 @@ const areaRegion: Record<string, RegionId> = {
   "גליל עליון": "north",
   "מצפה רמון": "south",
   "מדבר יהודה": "south",
+}
+
+/** Region of an event via its area; null when the area isn't mapped. */
+export function regionOf(e: SiteEvent): RegionId | null {
+  return areaRegion[e.area] ?? null
+}
+
+export type PlaceRegionId = Exclude<RegionId, "all">
+
+/**
+ * Homepage region discovery, in display order, with each region's name there. Only regions that have activities
+ * are shown. ("אונליין" has no support in the data yet: events have no online flag.)
+ */
+export const discoveryRegions: { id: PlaceRegionId; label: string }[] = [
+  { id: "north", label: "צפון" },
+  { id: "center", label: "תל אביב והסביבה" },
+  { id: "sharon", label: "שרון" },
+  { id: "jerusalem", label: "ירושלים והסביבה" },
+  { id: "south", label: "דרום" },
+]
+
+/** All activities (events and retreats) in a region, in the events listing order. */
+export function regionEvents(id: PlaceRegionId): SiteEvent[] {
+  return listings.events.items().filter((e) => regionOf(e) === id)
 }
 
 export const dateOptions = [
@@ -50,35 +74,14 @@ export type Filters = {
 
 export const defaultFilters: Filters = { region: "all", date: null, from: "", to: "", freeOnly: false, maxPrice: PRICE_MAX }
 
-const shortDate = (iso: string) => {
-  const [, m, d] = iso.split("-")
-  return `${Number(d)}.${Number(m)}`
-}
-
-/** Per-filter state for the home chips: whether it restricts anything, and the label (filter name until set). */
-export function describe(f: Filters) {
-  const region = regions.find((r) => r.id === f.region)!
-  const dateActive = f.date !== null && (f.date !== "custom" || f.from !== "")
-  const dateLabel = !dateActive
-    ? "תאריך"
-    : f.date === "custom"
-      ? f.to && f.to !== f.from
-        ? `${shortDate(f.from)}-${shortDate(f.to)}`
-        : shortDate(f.from)
-      : dateOptions.find((o) => o.id === f.date)!.label
-  const priceActive = f.freeOnly || f.maxPrice < PRICE_MAX
-  const priceLabel = f.freeOnly ? "בחינם בלבד" : priceActive ? `עד ₪${f.maxPrice.toLocaleString("en-US")}` : "מחיר"
-  return {
-    location: { active: f.region !== "all", label: f.region === "all" ? "מיקום" : region.label },
-    date: { active: dateActive, label: dateLabel },
-    price: { active: priceActive, label: priceLabel },
-  }
-}
-
-/** True when the filters restrict anything. */
+/** True when the filters restrict anything (drives the dot on the filter button). */
 export function isActive(f: Filters): boolean {
-  const d = describe(f)
-  return d.location.active || d.date.active || d.price.active
+  return (
+    f.region !== "all" ||
+    (f.date !== null && (f.date !== "custom" || f.from !== "")) ||
+    f.freeOnly ||
+    f.maxPrice < PRICE_MAX
+  )
 }
 
 /* ---------- Dates (whole days, local calendar) ---------- */
@@ -145,7 +148,7 @@ export function byNextDate(items: SiteEvent[], now = new Date()): SiteEvent[] {
 export function matcher(f: Filters, now = new Date()): (e: SiteEvent) => boolean {
   const window = dateWindow(f, now)
   return (e) => {
-    if (f.region !== "all" && areaRegion[e.area] !== f.region) return false
+    if (f.region !== "all" && regionOf(e) !== f.region) return false
     if (window) {
       const days = eventDays(e, now)
       // Overlap: any day of the event falls inside the window.

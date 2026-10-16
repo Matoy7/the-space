@@ -218,6 +218,8 @@ export type ListingId = keyof typeof listings
 
 export const listingHref = (id: ListingId) => `#/${id}`
 
+export const regionHref = (id: string) => `#/region/${id}`
+
 export const hostHref = (id: string) => `#/host/${id}`
 export const hostEventsHref = (id: string) => `#/host/${id}/events`
 

@@ -2,11 +2,11 @@ import { useEffect, useLayoutEffect, useRef, useState, type ReactNode, type RefO
 import AboutPage from "./AboutPage"
 import EventCard from "./EventCard"
 import HostPage from "./HostPage"
+import RegionCarousel from "./RegionCarousel"
 import ListingPage, { EventListPage } from "./ListingPage"
 import ContactPage from "./ContactPage"
 import EventPage from "./EventPage"
-import FilterSheet, { type FilterKind } from "./FilterSheet"
-import { FilterProvider, byNextDate, describe, useFiltered, useFilters } from "./filters"
+import { FilterProvider, byNextDate, discoveryRegions, regionEvents, type PlaceRegionId } from "./filters"
 import SideDrawer from "./SideDrawer"
 import {
   byIds,
@@ -22,7 +22,7 @@ import {
   upcomingIds,
   type SiteEvent,
 } from "./data"
-import { BellIcon, CalendarIcon, MenuIcon, MapPinIcon, TagIcon } from "./icons"
+import { BellIcon, MenuIcon } from "./icons"
 import { SectionHeader, pressable } from "./ui"
 
 const featuredRetreats = byIds(featuredIds)
@@ -267,88 +267,30 @@ const cardRail = "flex snap-x snap-mandatory gap-4 overflow-x-auto overscroll-x-
 /* Sticky header (56px) + 8px breathing room when jumping to a section via an anchor. */
 const anchorOffset = "scroll-mt-[calc(env(safe-area-inset-top)+64px)]"
 
-/** Shown in a home section when the filters leave it empty (the section's anchor and "הצג הכל" stay). */
-function NoResults() {
-  return (
-    <p className="mx-4 rounded-card bg-surface px-4 py-6 text-center text-meta text-ink-muted">
-      אין תוצאות שמתאימות לבחירה
-    </p>
-  )
-}
-
-const filterChips = [
-  { kind: "location", Icon: MapPinIcon, name: "מיקום" },
-  { kind: "date", Icon: CalendarIcon, name: "תאריך" },
-  { kind: "price", Icon: TagIcon, name: "מחיר" },
-] as const
-
-/** One chip per filter (location, date, price); each shows its current value and opens its own sheet. */
-function FilterChips() {
-  const { filters } = useFilters()
-  const state = describe(filters)
-  const [open, setOpen] = useState<FilterKind | null>(null)
-  const lastChip = useRef<HTMLButtonElement | null>(null)
-  return (
-    // -my-4 trims the page's 32px section gap to 16px on each side of this compact row.
-    <div className="-my-4">
-      <ul aria-label="סינון" className="flex gap-2 overflow-x-auto overscroll-x-contain px-4">
-        {filterChips.map(({ kind, Icon, name }) => {
-          const { active, label } = state[kind]
-          return (
-            <li className="shrink-0" key={kind}>
-              <button
-                aria-expanded={open === kind}
-                aria-haspopup="dialog"
-                aria-label={active ? `${name}: ${label}` : name}
-                className={`flex h-10 items-center gap-2 rounded-control border px-3 text-meta font-medium whitespace-nowrap ${pressable} ${
-                  active ? "border-olive bg-olive-soft text-olive-ink" : "border-line bg-surface text-ink active:bg-sand"
-                }`}
-                onClick={(e) => {
-                  lastChip.current = e.currentTarget
-                  setOpen(kind)
-                }}
-                type="button"
-              >
-                <Icon className={active ? "text-olive" : "text-ink-muted"} size={16} />
-                {label}
-              </button>
-            </li>
-          )
-        })}
-      </ul>
-      <FilterSheet kind={open} onClose={() => setOpen(null)} returnFocusTo={lastChip} />
-    </div>
-  )
-}
-
 function UpcomingEvents() {
-  const items = useFiltered(eventCards)
   return (
     <section className={`flex flex-col gap-4 ${anchorOffset}`} id="events">
       <SectionHeader actionHref={listingHref("events")} title="אירועים קרובים" />
       <div className={cardRail}>
-        {items.map((event) => (
+        {eventCards.map((event) => (
           <EventCard event={event} key={event.id} size="rail" />
         ))}
       </div>
-      {items.length === 0 && <NoResults />}
     </section>
   )
 }
 
 function FeaturedRetreats() {
-  const items = useFiltered(selectedRetreats)
   return (
     <section className={`flex flex-col gap-4 ${anchorOffset}`} id="retreats">
       <SectionHeader actionHref={listingHref("retreats")} title="ריטריטים נבחרים" />
       <div aria-label="ריטריטים נבחרים" className={cardRail} role="list">
-        {items.map((event) => (
+        {selectedRetreats.map((event) => (
           <div className="flex shrink-0 snap-start" key={event.id} role="listitem">
             <EventCard event={event} size="wide" />
           </div>
         ))}
       </div>
-      {items.length === 0 && <NoResults />}
     </section>
   )
 }
@@ -367,7 +309,7 @@ function SiteFooter() {
 }
 
 /* Hash routes keep deep links working on GitHub Pages: "#/event/<id>" is an event page, "#/events" and "#/retreats"
-   are full listings ("הצג הכל"), "#/host/<id>" is an instructor profile and "#/host/<id>/events" their activities,
+   are full listings ("הצג הכל"), "#/region/<id>" lists a region's activities, "#/host/<id>" is an instructor profile and "#/host/<id>/events" their activities,
    "#/about" and "#/contact" are pages; any other hash is the home page. */
 type Route =
   | { name: "home" }
@@ -377,12 +319,15 @@ type Route =
   | { name: "listing"; id: ListingId }
   | { name: "host"; id: string }
   | { name: "hostEvents"; id: string }
+  | { name: "region"; id: PlaceRegionId }
 
 function parseRoute(hash: string): Route {
   if (hash === "#/about") return { name: "about" }
   if (hash === "#/contact") return { name: "contact" }
   const listing = hash.slice(2)
   if (hash.startsWith("#/") && Object.prototype.hasOwnProperty.call(listings, listing)) return { name: "listing", id: listing as ListingId }
+  const region = discoveryRegions.find((r) => hash === `#/region/${r.id}`)
+  if (region) return { name: "region", id: region.id }
   const host = hash.match(/^#\/host\/([\w-]+)(\/events)?$/)
   if (host && hosts[host[1]]) return { name: host[2] ? "hostEvents" : "host", id: host[1] }
   const match = hash.match(/^#\/event\/([\w-]+)$/)
@@ -460,14 +405,13 @@ function SiteShell({
 }
 
 function HomePage({ category, setCategory }: { category: string; setCategory: (next: string) => void }) {
-  const slides = useFiltered(featuredRetreats)
   return (
     <SiteShell current="home">
       <main className="flex flex-col gap-8 pt-2 pb-8">
         <CategoryStrip onSelect={setCategory} selected={category} />
-        <FilterChips />
-        {slides.length > 0 && <FeaturedCarousel key={slides.map((e) => e.id).join()} slides={slides} />}
+        <FeaturedCarousel slides={featuredRetreats} />
         <UpcomingEvents />
+        <RegionCarousel />
         <FeaturedRetreats />
       </main>
       <SiteFooter />
@@ -495,6 +439,16 @@ function App() {
             key={route.id}
             onBack={goBack}
             title={`האירועים של ${hosts[route.id].name}`}
+          />
+        </SiteShell>
+      ) : route.name === "region" ? (
+        <SiteShell current="listing">
+          <EventListPage
+            emptyText="אין כרגע פעילויות באזור הזה"
+            items={regionEvents(route.id)}
+            key={route.id}
+            onBack={goBack}
+            title={discoveryRegions.find((r) => r.id === route.id)!.label}
           />
         </SiteShell>
       ) : route.name === "listing" ? (
