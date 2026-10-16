@@ -37,7 +37,7 @@ export default function SideDrawer({
   onClose: () => void
   returnFocusTo: React.RefObject<HTMLElement | null>
   /** Page currently shown, for the active state of page links. */
-  current?: "home" | "about" | "contact" | "listing" | "host" | "hosts"
+  current?: "home" | "about" | "contact" | "listing" | "host" | "hosts" | "join"
 }) {
   const titleId = useId()
   const panelRef = useRef<HTMLDivElement>(null)
@@ -153,8 +153,18 @@ export default function SideDrawer({
           <h3 className="text-meta font-medium text-ink-muted" id={`${titleId}-guides`}>
             למדריכים
           </h3>
-          {/* No submission flow exists yet, so the action is shown but not interactive. */}
-          <p aria-disabled="true" className="mt-2 flex items-center gap-2 text-title font-semibold text-ink/40">
+          <a
+            aria-current={current === "join" ? "page" : undefined}
+            className={`mt-2 flex h-12 items-center text-title font-semibold transition-colors active:text-accent ${
+              current === "join" ? "text-accent" : "text-ink"
+            }`}
+            href="#/join"
+            onClick={(e) => navigate(e, "#/join")}
+          >
+            מצטרפים למרחב
+          </a>
+          {/* No activity submission flow exists yet, so the action is shown but not interactive. */}
+          <p aria-disabled="true" className="flex items-center gap-2 text-title font-semibold text-ink/40">
             פרסום פעילות חדשה
             <ComingSoon />
           </p>

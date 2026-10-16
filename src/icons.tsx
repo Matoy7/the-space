@@ -108,3 +108,11 @@ export const SearchIcon = createIcon(
     <path d="m16 16 4 4" />
   </>,
 )
+
+export const ImagePlusIcon = createIcon(
+  <>
+    <path d="M19 12.5V17a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h7.5" />
+    <circle cx="9" cy="9.5" r="1.5" />
+    <path d="m4.5 17 4.5-4.5 3 3 2-2 3.5 3.5M18 3v6M15 6h6" />
+  </>,
+)

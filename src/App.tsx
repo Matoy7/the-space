@@ -3,6 +3,7 @@ import AboutPage from "./AboutPage"
 import EventCard from "./EventCard"
 import HostPage from "./HostPage"
 import HostsPage from "./HostsPage"
+import JoinPage from "./JoinPage"
 import RegionCarousel from "./RegionCarousel"
 import ListingPage, { EventListPage } from "./ListingPage"
 import ContactPage from "./ContactPage"
@@ -310,7 +311,7 @@ function SiteFooter() {
 }
 
 /* Hash routes keep deep links working on GitHub Pages: "#/event/<id>" is an event page, "#/events" and "#/retreats"
-   are full listings ("הצג הכל"), "#/region/<id>" lists a region's activities, "#/hosts" is the instructors directory, "#/host/<id>" an instructor profile and "#/host/<id>/events" their activities,
+   are full listings ("הצג הכל"), "#/region/<id>" lists a region's activities, "#/hosts" is the instructors directory, "#/join" the instructor sign-up, "#/host/<id>" an instructor profile and "#/host/<id>/events" their activities,
    "#/about" and "#/contact" are pages; any other hash is the home page. */
 type Route =
   | { name: "home" }
@@ -322,11 +323,13 @@ type Route =
   | { name: "hostEvents"; id: string }
   | { name: "region"; id: PlaceRegionId }
   | { name: "hosts" }
+  | { name: "join" }
 
 function parseRoute(hash: string): Route {
   if (hash === "#/about") return { name: "about" }
   if (hash === "#/contact") return { name: "contact" }
   if (hash === "#/hosts") return { name: "hosts" }
+  if (hash === "#/join") return { name: "join" }
   const listing = hash.slice(2)
   if (hash.startsWith("#/") && Object.prototype.hasOwnProperty.call(listings, listing)) return { name: "listing", id: listing as ListingId }
   const region = discoveryRegions.find((r) => hash === `#/region/${r.id}`)
@@ -393,7 +396,7 @@ function SiteShell({
   current,
   children,
 }: {
-  current: "home" | "about" | "contact" | "listing" | "host" | "hosts"
+  current: "home" | "about" | "contact" | "listing" | "host" | "hosts" | "join"
   children: ReactNode
 }) {
   const [menuOpen, setMenuOpen] = useState(false)
@@ -430,6 +433,10 @@ function App() {
     <FilterProvider>
       {route.name === "event" ? (
         <EventPage event={events[route.id]} key={route.id} onBack={goBack} />
+      ) : route.name === "join" ? (
+        <SiteShell current="join">
+          <JoinPage />
+        </SiteShell>
       ) : route.name === "hosts" ? (
         <SiteShell current="hosts">
           <HostsPage />
