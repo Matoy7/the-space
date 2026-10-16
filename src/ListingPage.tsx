@@ -1,17 +1,19 @@
 import { useEffect, useMemo, useState } from "react"
 import EventCard from "./EventCard"
 import { listings, type ListingId } from "./data"
+import { defaultFilters, useFiltered, useFilters } from "./filters"
 import { ChevronBackIcon } from "./icons"
 import { pressable } from "./ui"
 
 /** Items rendered per step; "הצגת עוד" adds the next batch, so long collections never render all at once. */
 const PAGE_SIZE = 10
 
-/* Full vertical listing behind a section's "הצג הכל": one column of the shared event cards, newest batch appended
-   below. Reached at "#/events" / "#/retreats". */
+/* Full vertical listing behind a section's "הצג הכל": one column of the shared event cards (narrowed by the site
+   filters), each batch appended below. Reached at "#/events" / "#/retreats". */
 export default function ListingPage({ id, onBack }: { id: ListingId; onBack: () => void }) {
   const { title, emptyText, items } = listings[id]
-  const all = useMemo(items, [items])
+  const { active, setFilters } = useFilters()
+  const all = useFiltered(useMemo(items, [items]))
   const [visible, setVisible] = useState(PAGE_SIZE)
 
   useEffect(() => {
@@ -37,7 +39,18 @@ export default function ListingPage({ id, onBack }: { id: ListingId; onBack: () 
       </div>
 
       {all.length === 0 ? (
-        <p className="mt-8 rounded-card bg-surface px-4 py-8 text-center text-body text-ink-muted">{emptyText}</p>
+        <div className="mt-8 flex flex-col items-center gap-4 rounded-card bg-surface px-4 py-8 text-center">
+          <p className="text-body text-ink-muted">{active ? "אין תוצאות שמתאימות לבחירה" : emptyText}</p>
+          {active && (
+            <button
+              className={`h-10 rounded-control bg-header-control px-4 text-meta font-semibold text-ink active:bg-line ${pressable}`}
+              onClick={() => setFilters(defaultFilters)}
+              type="button"
+            >
+              ניקוי הכל
+            </button>
+          )}
+        </div>
       ) : (
         <>
           <ul aria-label={title} className="mt-4 flex flex-col gap-4">

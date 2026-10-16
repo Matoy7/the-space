@@ -1,6 +1,6 @@
 import { useEffect, useRef, type RefObject } from "react"
 
-const FOCUSABLE = 'a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])'
+const FOCUSABLE = 'a[href], button:not([disabled]), input:not([disabled]), [tabindex]:not([tabindex="-1"])'
 
 /**
  * Shared modal behaviour for overlays (side drawer, bottom sheet):

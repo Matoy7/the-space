@@ -3,6 +3,7 @@ import { badgeLabel, listingHref, priceLabel, relatedEvents, sharePath, splitLoc
 import { formatEventDates } from "./dates"
 import { CalendarIcon, ChevronBackIcon, ChevronForwardIcon, MapPinIcon, ShareIcon, TagIcon } from "./icons"
 import EventCard from "./EventCard"
+import { useFiltered } from "./filters"
 import { RegisterButton, SectionHeader, pressable } from "./ui"
 
 /* Composition follows the approved reference (390px): 183px of photo above a sheet with 24px rounded corners,
@@ -94,6 +95,7 @@ export default function EventPage({ event, onBack }: { event: SiteEvent; onBack:
   // A fixed card price is used on the page too when no range is given.
   const priceText = event.priceRange ?? priceLabel(event)
   const related = relatedEvents(event)
+  const relatedItems = useFiltered(related.items)
   const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(event.location)}`
 
   useEffect(() => {
@@ -172,6 +174,7 @@ export default function EventPage({ event, onBack }: { event: SiteEvent; onBack:
 
         {event.host && <HostRow host={event.host} />}
 
+        {relatedItems.length > 0 && (
         <section className="border-t border-ink/10 pt-6 pb-2">
           <SectionHeader
             actionHref={listingHref("events")}
@@ -180,11 +183,12 @@ export default function EventPage({ event, onBack }: { event: SiteEvent; onBack:
             title={related.sameArea ? `עוד ב${event.area}` : "אירועים נוספים"}
           />
           <div className="-mx-4 mt-4 flex snap-x snap-mandatory gap-2 overflow-x-auto overscroll-x-contain scroll-px-4 px-4 pb-2">
-            {related.items.map((item) => (
+            {relatedItems.map((item) => (
               <EventCard event={item} key={item.id} size="compact" />
             ))}
           </div>
         </section>
+        )}
       </main>
 
       {toast && (

@@ -43,6 +43,9 @@ export const CalendarIcon = createIcon(
   </>,
 )
 
+/** Funnel: opens the filter sheet. */
+export const FilterIcon = createIcon(<path d="M4 5h16l-6 7.5V18l-4 2v-7.5L4 5Z" />)
+
 export const MenuIcon = createIcon(<path d="M4 7h16M4 12h16M4 17h16" />)
 
 export const ChevronDownIcon = createIcon(<path d="m7 10 5 5 5-5" />)

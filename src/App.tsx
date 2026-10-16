@@ -4,6 +4,8 @@ import EventCard from "./EventCard"
 import ListingPage from "./ListingPage"
 import ContactPage from "./ContactPage"
 import EventPage from "./EventPage"
+import FilterSheet from "./FilterSheet"
+import { FilterProvider, useFiltered, useFilters } from "./filters"
 import SideDrawer from "./SideDrawer"
 import {
   byIds,
@@ -17,7 +19,7 @@ import {
   upcomingIds,
   type SiteEvent,
 } from "./data"
-import { BellIcon, MenuIcon } from "./icons"
+import { BellIcon, FilterIcon, MenuIcon } from "./icons"
 import { SectionHeader, pressable } from "./ui"
 
 const featuredRetreats = byIds(featuredIds)
@@ -153,8 +155,8 @@ function FeaturedSlide({
   )
 }
 
-function FeaturedCarousel() {
-  const total = featuredRetreats.length
+function FeaturedCarousel({ slides }: { slides: SiteEvent[] }) {
+  const total = slides.length
   const [active, setActive] = useState(0)
   const [interacting, setInteracting] = useState(false)
   const [focused, setFocused] = useState(false)
@@ -174,7 +176,7 @@ function FeaturedCarousel() {
 
   const paused = interacting || focused || pageHidden
   useEffect(() => {
-    if (paused) return
+    if (paused || total < 2) return
     const timer = window.setTimeout(() => setActive((i) => (i + 1) % total), AUTOPLAY_MS)
     return () => window.clearTimeout(timer)
   }, [active, paused, timerEpoch, total])
@@ -229,13 +231,13 @@ function FeaturedCarousel() {
         }}
         onPointerUp={(e) => endInteraction(e.clientX)}
       >
-        {featuredRetreats.map((slide, index) => (
+        {slides.map((slide, index) => (
           <FeaturedSlide active={index === active} event={slide} index={index} key={slide.id} total={total} />
         ))}
       </div>
 
-      <div className="flex items-center justify-center">
-        {featuredRetreats.map((slide, index) => (
+      <div className={`flex items-center justify-center ${total < 2 ? "hidden" : ""}`}>
+        {slides.map((slide, index) => (
           <button
             aria-current={index === active ? "true" : undefined}
             aria-label={`מעבר לשקופית ${index + 1}: ${slide.title}`}
@@ -262,30 +264,71 @@ const cardRail = "flex snap-x snap-mandatory gap-4 overflow-x-auto overscroll-x-
 /* Sticky header (56px) + 8px breathing room when jumping to a section via an anchor. */
 const anchorOffset = "scroll-mt-[calc(env(safe-area-inset-top)+64px)]"
 
+/** Shown in a home section when the filters leave it empty (the section's anchor and "הצג הכל" stay). */
+function NoResults() {
+  return (
+    <p className="mx-4 rounded-card bg-surface px-4 py-6 text-center text-meta text-ink-muted">
+      אין תוצאות שמתאימות לבחירה
+    </p>
+  )
+}
+
+/** Icon-only trigger for the filter sheet; a dot marks applied filters. */
+function FilterRow() {
+  const { active } = useFilters()
+  const [open, setOpen] = useState(false)
+  const buttonRef = useRef<HTMLButtonElement>(null)
+  return (
+    // -my-4 trims the page's 32px section gap to 16px on each side of this compact row.
+    <div className="-my-4 flex px-4">
+      <button
+        aria-controls="filter-sheet"
+        aria-expanded={open}
+        aria-haspopup="dialog"
+        aria-label={active ? "סינון תוצאות (פעיל)" : "סינון תוצאות"}
+        className={`${headerControl} relative w-10`}
+        onClick={() => setOpen(true)}
+        ref={buttonRef}
+        type="button"
+      >
+        <FilterIcon />
+        {active && (
+          <span aria-hidden="true" className="absolute end-1.5 top-1.5 size-2 rounded-full bg-accent ring-2 ring-header-control" />
+        )}
+      </button>
+      <FilterSheet onClose={() => setOpen(false)} open={open} returnFocusTo={buttonRef} />
+    </div>
+  )
+}
+
 function UpcomingEvents() {
+  const items = useFiltered(eventCards)
   return (
     <section className={`flex flex-col gap-4 ${anchorOffset}`} id="events">
       <SectionHeader actionHref={listingHref("events")} title="אירועים קרובים" />
       <div className={cardRail}>
-        {eventCards.map((event) => (
+        {items.map((event) => (
           <EventCard event={event} key={event.id} size="rail" />
         ))}
       </div>
+      {items.length === 0 && <NoResults />}
     </section>
   )
 }
 
 function FeaturedRetreats() {
+  const items = useFiltered(selectedRetreats)
   return (
     <section className={`flex flex-col gap-4 ${anchorOffset}`} id="retreats">
       <SectionHeader actionHref={listingHref("retreats")} title="ריטריטים נבחרים" />
       <div aria-label="ריטריטים נבחרים" className={cardRail} role="list">
-        {selectedRetreats.map((event) => (
+        {items.map((event) => (
           <div className="flex shrink-0 snap-start" key={event.id} role="listitem">
             <EventCard event={event} size="wide" />
           </div>
         ))}
       </div>
+      {items.length === 0 && <NoResults />}
     </section>
   )
 }
@@ -386,11 +429,13 @@ function SiteShell({ current, children }: { current: "home" | "about" | "contact
 }
 
 function HomePage({ category, setCategory }: { category: string; setCategory: (next: string) => void }) {
+  const slides = useFiltered(featuredRetreats)
   return (
     <SiteShell current="home">
       <main className="flex flex-col gap-8 pt-2 pb-8">
         <CategoryStrip onSelect={setCategory} selected={category} />
-        <FeaturedCarousel />
+        <FilterRow />
+        {slides.length > 0 && <FeaturedCarousel key={slides.map((e) => e.id).join()} slides={slides} />}
         <UpcomingEvents />
         <FeaturedRetreats />
       </main>
@@ -404,7 +449,7 @@ function App() {
   // Lives above the router so the chosen category survives a visit to an event page.
   const [category, setCategory] = useState<string>(categories[0].name)
   return (
-    <>
+    <FilterProvider>
       {route.name === "event" ? (
         <EventPage event={events[route.id]} key={route.id} onBack={goBack} />
       ) : route.name === "listing" ? (
@@ -422,7 +467,7 @@ function App() {
       ) : (
         <HomePage category={category} setCategory={setCategory} />
       )}
-    </>
+    </FilterProvider>
   )
 }
 
